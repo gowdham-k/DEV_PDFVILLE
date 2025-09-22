@@ -1,0 +1,21 @@
+{
+  "name": "pdf-toolbox-frontend",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev -p 3000",
+    "build": "next build",
+    "start": "next start -p 3000"
+  },
+  "dependencies": {
+    "@aws-amplify/ui-react": "^6.11.2",
+    "@stripe/stripe-js": "^2.4.0",
+    "aws-amplify": "^6.15.5",
+    "axios": "^1.11.0",
+    "next": "13.5.6",
+    "pdf-lib": "^1.17.1",
+    "react": "18.2.0",
+    "react-dom": "18.2.0",
+    "stripe": "^14.25.0"
+  }
+}

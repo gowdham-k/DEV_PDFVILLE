@@ -1,0 +1,14 @@
+# Node
+node_modules/
+.next/
+build/
+dist/
+
+# Python/Flask
+__pycache__/
+venv/
+*.pyc
+
+# Environment
+.env
+*.log
