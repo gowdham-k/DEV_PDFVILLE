@@ -6,17 +6,15 @@ import { API_BASE_URL } from "../components/config";
 export const CategoryContext = createContext();
 
 const tools = [
-  { title: "Add Page Numbers", desc: "Add page numbers to PDF documents.", icon: "\u{1F517}", category: "Organize PDF", path: "/pdf_add_page_numbers" },
   { title: "Split PDF", desc: "Separate one page or multiple pages from a PDF.", icon: "\u2702\uFE0F", category: "Organize PDF", path: "/split_pdf" },
-  { title: "Rotate PDF", desc: "Rotate PDF pages to fix orientation.", icon: "\u{1F504}", category: "Organize PDF", path: "/rotate_pdf" },
-  { title: "Repair PDF", desc: "Repair corrupted or damaged PDFs.", icon: "\u{1F527}", category: "Optimize PDF", path: "/repair_pdf"},
   { title: "Merge PDF", desc: "Combine multiple PDFs into one file.", icon: "\u{1F517}", category: "Organize PDF", path: "/merge_pdf" },
   { title: "Compress PDF", desc: "Reduce PDF file size while maintaining quality.", icon: "\u{1F5DC}\uFE0F", category: "Optimize PDF", path: "/compress_pdf" },
   { title: "Add Watermark", desc: "Add text or image watermark to your PDF.", icon: "\u{1F4A7}", category: "Organize PDF", path: "/pdf_add_watermark" },
   { title: "Remove Pages", desc: "Delete specific pages from your PDF document.", icon: "\u{1F5D1}\uFE0F", category: "Organize PDF", path: "/remove_pages" },
+  { title: "Edit PDF", desc: "Modify text, images, and other elements in your PDF.", icon: "\u{1F4DD}", category: "Organize PDF", path: "/edit_pdf" },
   { title: "Unlock PDF", desc: "Unlock password-protected PDFs.", icon: "\u{1F513}", category: "Secure PDF", path: "/unlock_pdf" },
-  { title: "Scan PDF", desc: "Scan documents and convert them to PDF format.", icon: "\u{1F5BC}\uFE0F", category: "Convert PDF", path: "/scan_pdf" },
-
+  {title: "Rotate PDF", desc: "Rotate PDF pages to fix orientation.", icon: "\u{1F504}", category: "Organize PDF", path: "/rotate_pdf"},
+  {title: "Repair PDF", desc: "Repair corrupted or damaged PDFs.", icon: "\u{1F527}", category: "Optimize PDF", path: "/repair_pdf"},
   // Convert FROM PDF tools
   { title: "Convert to JPG", desc: "Convert PDF pages into JPG images.", icon: "\u{1F5BC}\uFE0F", category: "Convert PDF", path: "/pdf_to_jpg" },
   { title: "Convert to PNG", desc: "Convert PDF pages into PNG images.", icon: "\u{1F3A8}", category: "Convert PDF", path: "/pdf_to_png" },
@@ -25,7 +23,10 @@ const tools = [
   { title: "Convert to Excel", desc: "Change PDFs into Excel spreadsheets.", icon: "\u{1F4C8}", category: "Convert PDF", path: "/pdf_to_excel" },
   { title: "Convert to HTML", desc: "Transform PDFs into HTML documents.", icon: "\u{1F310}", category: "Convert PDF", path: "/pdf_to_html" },
   { title: "Convert to PDF/A", desc: "Convert PDF to PDF/A format for long-term archiving.", icon: "\u{1F4DA}", category: "Convert PDF", path: "/pdf_to_pdfa" },
+  { title: "Add Page Numbers", desc: "Add page numbers to PDF documents.", icon: "\u{1F517}", category: "Organize PDF", path: "/pdf_add_page_numbers" },
+  { title: "Edit PDF", desc: "Add page numbers to PDF documents.", icon: "\u{1F517}", category: "Organize PDF", path: "/edit_pdf" },
   
+  { title: "Scan PDF", desc: "Scan documents and convert them to PDF format.", icon: "\u{1F5BC}\uFE0F", category: "Convert PDF", path: "/scan_pdf" },
   // Convert TO PDF tools (reverse conversions)
   { title: "JPG to PDF", desc: "Convert JPG images into a single PDF document.", icon: "\u{1F4C4}", category: "Convert to PDF", path: "/jpg_to_pdf" },
   { title: "PNG to PDF", desc: "Convert PNG images into a single PDF document.", icon: "\u{1F4CB}", category: "Convert to PDF", path: "/png_to_pdf" },
@@ -34,9 +35,8 @@ const tools = [
   { title: "Excel to PDF", desc: "Convert Excel spreadsheets to PDF format.", icon: "\u{1F4CA}", category: "Convert to PDF", path: "/excel_to_pdf" },
   { title: "HTML to PDF", desc: "Convert HTML documents to PDF format.", icon: "\u{1F517}", category: "Convert to PDF", path: "/html_to_pdf" },  
   { title: "Add Signature", desc: "Add a signature to a PDF file.", icon: "\u{1F512}", category: "Secure PDF", path: "/sign_pdf" },
-  { title: "Edit PDF", desc: "Add page numbers to PDF documents.", icon: "\u{1F517}", category: "Organize PDF", path: "/edit_pdf" },
-
   { title: "Secure PDF", desc: "Protect your PDF with a password.", icon: "\u{1F512}", category: "Secure PDF", path: "/pdf_secure" },
+  { title: "Translate PDF", desc: "Translate PDF content to different languages.", icon: "\u{1F30D}", category: "Optimize PDF", path: "/pdf_translate" },
 ];
 
 const categories = ["All", "Organize PDF", "Convert PDF", "Convert to PDF", "Optimize PDF", "Secure PDF"];
@@ -69,6 +69,7 @@ const sidebarTools = [
   { name: "Split", path: "/split_pdf", icon: "\u2702\uFE0F" }, 
   { name: "Merge", path: "/merge_pdf", icon: "\u{1F517}" }, 
   { name: "Compress", path: "/compress_pdf", icon: "\u{1F5DC}\uFE0F" }, 
+  { name: "Edit", path: "/edit_pdf", icon: "\u{1F4DD}" },
   { name: "Convert", path: "/convert_pdf", icon: "\u{1F504}" }, 
   { name: "To PDF", path: "/convert_to_pdf", icon: "\u{1F4C4}" },
   { name: "Secure", path: "/pdf_secure", icon: "\u{1F512}" },
@@ -159,7 +160,7 @@ const MobileMenu = ({
             cursor: "pointer",
           }}
         >
-          x
+          Ã—
         </button>
       </div>
 
@@ -745,7 +746,7 @@ const MobileMenu = ({
                     <div onClick={() => router.push("/security")} style={{ cursor: "pointer", fontSize: "0.9rem" }}>Security</div>
                   </li>
                   <li style={{ marginBottom: "0.5rem" }}>
-                    <div onClick={() => router.push("/privacy-policy")} style={{ cursor: "pointer", fontSize: "0.9rem" }}>Privacy policy</div>
+                    <div onClick={() => router.push("/privacy_policy")} style={{ cursor: "pointer", fontSize: "0.9rem" }}>Privacy policy</div>
                   </li>
                   <li style={{ marginBottom: "0.5rem" }}>
                     <div onClick={() => router.push("/terms")} style={{ cursor: "pointer", fontSize: "0.9rem" }}>Terms & conditions</div>
@@ -809,7 +810,7 @@ const MobileMenu = ({
             }}>           
               {/* Copyright */}
               <div style={{ fontSize: "0.9rem", color: "#9ca3af" }}>
-                 PDFVille {new Date().getFullYear()}  Your PDF Editor
+                © PDFVille {new Date().getFullYear()} • Your PDF Editor
               </div>
             </div>
           </footer>

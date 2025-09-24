@@ -1,6 +1,6 @@
 import os
 import PyPDF2
-from flask import Flask, jsonify
+from flask import Flask, jsonify, send_file
 from flask_cors import CORS
 # session/progress tracking
 from flask import session
@@ -33,15 +33,16 @@ from convert_excel_to_pdf import convert_excel_to_pdf
 from convert_pptx_to_pdf import convert_pptx_to_pdf
 from convert_html_to_pdf import convert_html_to_pdf
 from convert_to_pdfa import convert_pdf_to_pdfa
-from rotate_pdf import rotate_pdf_pages
 from add_watermark import add_watermark
-from add_page_numbers import add_page_numbers_route
 from remove_pages import remove_pages
 from unlock_pdf import unlock_pdf
-from scan_pdf import scan_pdf
+from rotate_pdf import rotate_pdf_pages
+from repair_pdf import repair_pdf
 from edit_pdf import edit_pdf
-
-
+from add_page_numbers import add_page_numbers_route
+from scan_pdf import scan_pdf
+from sign_pdf import sign_pdf
+from translate_pdf import translate_pdf_route
 from functools import wraps
 import hmac
 import hashlib
@@ -51,7 +52,6 @@ from cognito_utils import set_premium_cognito # Add this line
     # ...
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
-
 pdfmetrics.registerFont(TTFont('Arial', 'arial.ttf'))
 
 # Now use 'Arial' in your PDF code
@@ -81,6 +81,20 @@ if cors_origins == '*':
 else:
     origins = cors_origins.split(',')
     CORS(app, resources={r"/*": {"origins": origins}}, supports_credentials=True)
+
+@app.route(prefix_route("/api/translate-pdf"), methods=["POST"])
+def translate_pdf_api():
+    """Route for translating PDF files"""
+    return translate_pdf_route(request)
+
+# Health check endpoint
+@app.route('/health', methods=['GET'])
+def health_check():
+    return jsonify({
+        'status': 'healthy',
+        'environment': os.environ.get('FLASK_ENV', 'development'),
+        'timestamp': time.time()
+    })
 
 # Get API prefix from environment
 API_PREFIX = os.environ.get('API_PREFIX', '')
@@ -607,15 +621,26 @@ def pdf_remove_pages_route():
     """Route for removing pages from PDF"""
     return remove_pages()
 
+@app.route(prefix_route('/pdf-rotate-pages'), methods=['POST'])
+def rotate_pdf_pages_route():
+    """Route for rotating PDF pages"""
+    return rotate_pdf_pages()
+
 @app.route(prefix_route("/pdf-unlock"), methods=["POST"])
 def pdf_unlock_route():
     """Route for unlocking password-protected PDFs"""
     return unlock_pdf()
 
-@app.route(prefix_route('/pdf-rotate-pages'), methods=['POST'])
-def rotate_pdf_pages_route():
-    """Route for rotating PDF pages"""
-    return rotate_pdf_pages()
+@app.route(prefix_route("/repair-pdf"), methods=["POST"])
+def repair_pdf_route():
+    """Route for repairing PDFs"""
+    return repair_pdf()
+
+@app.route(prefix_route("/edit-pdf"), methods=["POST"])
+def edit_pdf_api_route():
+    """Route for editing PDFs"""
+    from edit_pdf import edit_pdf
+    return edit_pdf()
 
 @app.route(prefix_route("/pdf-add-page-numbers"), methods=["POST"])
 def pdf_add_page_numbers_route():
@@ -625,18 +650,43 @@ def pdf_add_page_numbers_route():
 @app.route(prefix_route("/pdf-scan"), methods=["POST"])
 def pdf_scan_route():
     """Route for scanning PDF with OCR"""
-    return scan_pdf()  
+    return scan_pdf()   
 
-@app.route(prefix_route("/edit-pdf"), methods=["POST"])
-def edit_pdf_api_route():
-    """Route for editing PDFs"""
-    return edit_pdf()
-
+@app.route(prefix_route("/pdf-sign"), methods=["POST"])
+def pdf_sign_route():
+    """Add a signature to a PDF file"""
+    try:
+        # Check if file was uploaded
+        if 'file' not in request.files:
+            return jsonify({"error": "No file part"}), 400
+        
+        file = request.files['file']
+        if file.filename == '':
+            return jsonify({"error": "No file selected"}), 400
+        
+        # Get parameters
+        signature_text = request.form.get('signature_text', '')
+        position_x = int(request.form.get('position_x', 100))
+        position_y = int(request.form.get('position_y', 100))
+        page_number = int(request.form.get('page_number', 0))
+        
+        # Save the uploaded file
+        input_file_path = os.path.join(os.getcwd(), "temp_input.pdf")
+        file.save(input_file_path)
+        
+        # Sign the PDF
+        output_file_path = sign_pdf(input_file_path, signature_text, position_x, position_y, page_number)
+        
+        # Return the signed PDF
+        return send_file(output_file_path, as_attachment=True, download_name="signed.pdf")
+    
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 # ---------- Public Routes ----------
 
-@app.route(prefix_route("/health"), methods=["GET"])
-def health_check():
-    """Health check endpoint"""
+@app.route(prefix_route("/health-status"), methods=["GET"])
+def api_health_check():
+    """Health check endpoint for the API"""
     return jsonify({"status": "healthy", "message": "PDF Toolbox API is running"})
 
 @app.route(prefix_route("/progress/<task_id>"), methods=["GET"])
@@ -676,6 +726,10 @@ if __name__ == "__main__":
     print("   POST /convert-excel-to-pdf - Convert Excel to PDF (protected)")
     print("   POST /convert-pptx-to-pdf - Convert PowerPoint to PDF (protected)")
     print("   POST /convert-html-to-pdf - Convert HTML to PDF (protected)")
+    print("   POST /pdf-add-watermark - Add watermark to PDF (protected)")
+    print("   POST /remove-pages - Remove pages from PDF (protected)")
+    print("   POST /pdf-unlock - Unlock password-protected PDFs (protected)")
+    print("   POST /pdf-scan - Scan PDF with OCR (protected)")
     print("   GET /health - Check server status")
     print("   GET /progress/<task_id> - Get operation progress")
     print("\n✅ CORS enabled for all origins")
