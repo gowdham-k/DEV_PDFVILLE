@@ -449,7 +449,7 @@ export default function AddPageNumbersPage() {
 
       <div style={styles.maxWidth}>
         <button onClick={goBack} style={styles.backButton}>
-          \u2190 Back to Home
+          ← Back to Home
         </button>
 
         <div style={styles.header}>
