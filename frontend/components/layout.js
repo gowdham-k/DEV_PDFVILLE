@@ -36,7 +36,6 @@ const tools = [
   { title: "HTML to PDF", desc: "Convert HTML documents to PDF format.", icon: "\u{1F517}", category: "Convert to PDF", path: "/html_to_pdf" },  
   { title: "Add Signature", desc: "Add a signature to a PDF file.", icon: "\u{1F512}", category: "Secure PDF", path: "/sign_pdf" },
   { title: "Secure PDF", desc: "Protect your PDF with a password.", icon: "\u{1F512}", category: "Secure PDF", path: "/pdf_secure" },
-  { title: "Translate PDF", desc: "Translate PDF content to different languages.", icon: "\u{1F30D}", category: "Optimize PDF", path: "/pdf_translate" },
 ];
 
 const categories = ["All", "Organize PDF", "Convert PDF", "Convert to PDF", "Optimize PDF", "Secure PDF"];
