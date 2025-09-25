@@ -1,4 +1,4 @@
-from restrictions import check_restrictions, get_user
+from restrictions import check_compress_pdf_restrictions, get_user
 from flask import jsonify, send_file, request
 import pikepdf
 import traceback
@@ -29,8 +29,10 @@ def compress_pdf():
     try:
         start_time = time.time()
         # Handle both 'file' and 'files'
-        uploaded_file = request.files.get("file") or request.files.getlist("files")[0]
-        if not uploaded_file:
+        files = request.files.getlist("files") or [request.files.get("file")]
+        files = [f for f in files if f]  # Filter out None values
+        
+        if not files:
             return jsonify({"error": "No file provided"}), 400
 
         # Get compression level from request (default = medium)
@@ -38,20 +40,44 @@ def compress_pdf():
 
         # --- PREMIUM CHECK HERE ---
         email = request.form.get("email")
-        user = get_user(email)
-        restriction = check_restrictions([uploaded_file.filename], user)
+        
+        # Create temporary files for restriction checking
+        temp_files = []
+        for file in files:
+            temp_path = create_temp_file(".pdf")
+            file.save(temp_path)
+            temp_files.append(temp_path)
+            
+        # Check restrictions specific to compress_pdf
+        restriction = check_compress_pdf_restrictions(email, temp_files, compression_level)
         if restriction:
-            return restriction
+            # Clean up temp files
+            for temp_file in temp_files:
+                if os.path.exists(temp_file):
+                    os.remove(temp_file)
+            # Handle new error format with upgrade button
+            if isinstance(restriction, dict):
+                return jsonify(restriction), 403
+            else:
+                # Backward compatibility for string errors
+                return jsonify({"error": restriction}), 403
+        
+        # Get user status for premium features
+        user = get_user(email)
+        is_premium = user["is_premium_"]
         # --------------------------
 
-        # Temp input/output paths
-        input_path = create_temp_file(".pdf")
-        output_path = create_temp_file(".pdf")
-        temp_path = create_temp_file(".pdf")  # For intermediate processing
-        uploaded_file.save(input_path)
-
-        # File size before compression
-        original_size = os.path.getsize(input_path)
+        # Process each file (single file for free users, multiple for premium)
+        results = []
+        
+        for file_index, file in enumerate(temp_files):
+            # Temp output path for this file
+            output_path = create_temp_file(".pdf")
+            temp_path = create_temp_file(".pdf")  # For intermediate processing
+            
+            # File size before compression
+            original_size = os.path.getsize(file)
+            input_path = file
 
         # -------------------------------
         # MODE: LOSSLESS (metadata cleanup + stream compression)
@@ -79,6 +105,13 @@ def compress_pdf():
         elif compression_level == "medium":
             # First pass with PyMuPDF for image optimization
             pymupdf_optimize(input_path, temp_path, quality=90, resolution=170)
+            
+        # -------------------------------
+        # MODE: HIGH (premium only - maximum compression)
+        # -------------------------------
+        elif compression_level == "high" and is_premium:
+            # High compression is premium only - uses more aggressive settings
+            pymupdf_optimize(input_path, temp_path, quality=70, resolution=150, grayscale=False)
             
             # Second pass with pikepdf for additional optimization
             with pikepdf.open(temp_path) as pdf:
@@ -126,34 +159,60 @@ def compress_pdf():
             os.remove(temp_path)
 
         # File size after compression
-        compressed_size = os.path.getsize(output_path)
-        compression_ratio = (original_size - compressed_size) / original_size * 100
-        
-        # Format sizes for display
-        original_size_formatted = format_file_size(original_size)
-        compressed_size_formatted = format_file_size(compressed_size)
-        processing_time = time.time() - start_time
-
-        print(f"Compression results: Original {original_size/1024:.2f}KB ? "
-              f"Compressed {compressed_size/1024:.2f}KB "
-              f"({compression_ratio:.2f}% saved) in {processing_time:.2f}s")
-
-        # Check if the request wants JSON response (for frontend display)
-        if request.form.get("return_stats") == "true":
-            return jsonify({
+            compressed_size = os.path.getsize(output_path)
+            compression_ratio = (original_size - compressed_size) / original_size * 100
+            
+            # Format sizes for display
+            original_size_formatted = format_file_size(original_size)
+            compressed_size_formatted = format_file_size(compressed_size)
+            
+            # Add result for this file
+            results.append({
                 "success": True,
                 "original_size": original_size,
                 "compressed_size": compressed_size,
                 "original_size_formatted": original_size_formatted,
                 "compressed_size_formatted": compressed_size_formatted,
                 "compression_ratio": round(compression_ratio, 2),
+                "file_url": f"/download/{os.path.basename(output_path)}",
+                "output_path": output_path,
+                "filename": os.path.basename(file)
+            })
+            
+            print(f"Compression results for file {file_index+1}/{len(temp_files)}: Original {original_size/1024:.2f}KB → "
+                  f"Compressed {compressed_size/1024:.2f}KB "
+                  f"({compression_ratio:.2f}% saved)")
+        
+        # Clean up temp input files
+        for temp_file in temp_files:
+            if os.path.exists(temp_file):
+                os.remove(temp_file)
+                
+        processing_time = time.time() - start_time
+        
+        # Check if the request wants JSON response (for frontend display)
+        if request.form.get("return_stats") == "true":
+            return jsonify({
+                "success": True,
+                "files": results,
+                "file_count": len(results),
                 "processing_time": round(processing_time, 2),
                 "compression_level": compression_level,
-                "file_url": f"/download/{os.path.basename(output_path)}"
+                "is_premium": is_premium
             })
         
-        # Default behavior: return the file directly
-        return send_file(output_path, as_attachment=True, download_name="compressed.pdf")
+        # Default behavior: return the file directly (for single file) or a zip for multiple files
+        if len(results) == 1:
+            return send_file(results[0]["output_path"], as_attachment=True, download_name="compressed.pdf")
+        else:
+            # For multiple files, create a zip file
+            zip_path = create_temp_file(".zip")
+            import zipfile
+            with zipfile.ZipFile(zip_path, 'w') as zipf:
+                for result in results:
+                    zipf.write(result["output_path"], f"compressed_{result['filename']}")
+            
+            return send_file(zip_path, as_attachment=True, download_name="compressed_pdfs.zip")
 
     except Exception as e:
         print(f"Error in compress_pdf: {str(e)}")

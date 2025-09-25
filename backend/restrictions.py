@@ -41,7 +41,7 @@ def get_user(email):
 
 def check_restrictions(email, file_paths):
     user = get_user(email) # Now gets user from Cognito
-    if True:
+    if user["is_premium_"]:
         return None  # Premium = no restrictions
 
     # Free user restrictions
@@ -65,5 +65,44 @@ def check_restrictions(email, file_paths):
             print(f"Error reading PDF pages for restriction check: {e}")
             return f"Could not process file {os.path.basename(path)} for restriction check."
 
+    return None
+
+def check_compress_pdf_restrictions(email, file_paths, compression_level="medium"):
+    """
+    Check restrictions specific to the compress_pdf feature.
+    
+    Args:
+        email: User's email
+        file_paths: List of file paths to check
+        compression_level: Compression level requested (low, medium, high)
+        
+    Returns:
+        Error message if restrictions are violated, None otherwise
+    """
+    user = get_user(email)
+    
+    # Premium users have no restrictions
+    if user["is_premium_"]:
+        return None
+        
+    # Free user restrictions for compress_pdf
+    FREE_MAX_FILES = 1  # Free users can only compress one file at a time
+    FREE_MAX_FILE_SIZE_MB = 0.3  # Free users limited to 300KB files
+    FREE_COMPRESSION_LEVELS = ["low", "medium"]  # Free users can't use high compression
+    
+    # Check number of files
+    if len(file_paths) > FREE_MAX_FILES:
+        return {"error": "Free users can only compress one file at a time. Upgrade to premium for batch compression.", "show_upgrade": True}
+    
+    # Check file size
+    for path in file_paths:
+        size_mb = (os.path.getsize(path) / (1024 * 1024))
+        if size_mb > FREE_MAX_FILE_SIZE_MB:
+            return {"error": f"File {os.path.basename(path)} exceeds 300KB free limit. Premium users can compress files up to 500MB.", "show_upgrade": True}
+    
+    # Check compression level
+    if compression_level not in FREE_COMPRESSION_LEVELS:
+        return {"error": "High compression quality is a premium feature. Please upgrade to access it.", "show_upgrade": True}
+    
     return None
 

@@ -1,19 +1,24 @@
-// --- Premium modal handling injected ---
-function useUpgradeModal() {
-  const [showModal, setShowModal] = useState(false);
-  const [modalMsg, setModalMsg] = useState("");
-  return { showModal, setShowModal, modalMsg, setModalMsg };
-}
+// --- Premium modal handling ---
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import UpgradeModal from "../../components/UpgradeModal";
 import { API_BASE_URL } from "../../components/config";
+import HubspotTracking, { trackEvent } from "../../components/HubspotTracking";
+import Head from "next/head";
 
 export default function CompressPage() {  
   const [file, setFile] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [dragActive, setDragActive] = useState(false);
   const [compressionLevel, setCompressionLevel] = useState('medium');
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [upgradeMessage, setUpgradeMessage] = useState('');
+  
+  // Track page view and events with HubSpot
+  useEffect(() => {
+    // Track page view
+    trackEvent('PDF Compression Tool Viewed');
+  }, []);
 
   const handleFileChange = (e) => {
     if (e.target.files.length > 0) {
@@ -56,6 +61,13 @@ export default function CompressPage() {
       return;
     }
 
+    // Track compression event in HubSpot
+    trackEvent('PDF Compression Started', {
+      compressionLevel: compressionLevel,
+      fileSize: file.size,
+      fileName: file.name
+    });
+
     setIsProcessing(true);
     setCompressionStats(null);
 
@@ -65,13 +77,30 @@ export default function CompressPage() {
       formData.append("compression_level", compressionLevel);
       formData.append("return_stats", "true");
 
-      const response = await fetch(`${API_BASE_URL}/compress`, {
+      // Make sure we're using the correct API endpoint that matches the backend
+      const response = await fetch(`${API_BASE_URL}/api/compress`, {
         method: "POST",
         body: formData,
       });
 
+      // Check for error responses (including 403)
       if (!response.ok) {
-        throw new Error(`Server error: ${response.status}`);
+        const contentType = response.headers.get("content-type");
+        if (contentType && contentType.includes("application/json")) {
+          const errorData = await response.json();
+          
+          // Check if it's a restriction error with upgrade option
+          if (response.status === 403 && errorData.show_upgrade) {
+            setUpgradeMessage(errorData.error);
+            setShowUpgradeModal(true);
+            return;
+          }
+          
+          // Otherwise throw a generic error
+          throw new Error(errorData.error || `Server error: ${response.status}`);
+        } else {
+          throw new Error(`Server error: ${response.status}`);
+        }
       }
 
       // Check if the response is JSON (stats) or blob (file)
@@ -85,7 +114,7 @@ export default function CompressPage() {
         fileFormData.append("file", file);
         fileFormData.append("compression_level", compressionLevel);
         
-        const fileResponse = await fetch(`${API_BASE_URL}/compress`, {
+        const fileResponse = await fetch(`${API_BASE_URL}/api/compress`, {
           method: "POST",
           body: fileFormData,
         });
@@ -101,6 +130,14 @@ export default function CompressPage() {
         a.download = "compressed.pdf";
         a.click();
         window.URL.revokeObjectURL(url);
+        
+        // Track successful compression in HubSpot
+        trackEvent('PDF Compression Completed', {
+          compressionLevel: compressionLevel,
+          originalSize: file.size,
+          compressedSize: blob.size,
+          reductionPercentage: ((file.size - blob.size) / file.size * 100).toFixed(2)
+        });
       } else {
         // Handle as before for backward compatibility
         const blob = await response.blob();
@@ -398,6 +435,188 @@ export default function CompressPage() {
   };
 
   return (
+    <>
+      {/* Upgrade Modal */}
+      {showUpgradeModal && (
+        <UpgradeModal 
+          message={upgradeMessage} 
+          onClose={() => setShowUpgradeModal(false)} 
+        />
+      )}
+      
+      <Head>    
+  <title>Compress PDF – PDFVille</title>
+  <meta name="description" content="Compress PDF files online for free. Reduce PDF file size while maintaining quality with our easy-to-use PDF compression tool." />
+
+  <HubspotTracking 
+    pageName="PDF Compression Tool" 
+    pageData={{ 
+      toolType: "compression",
+      toolCategory: "pdf_optimization" 
+    }} 
+  />
+
+  <script
+    type="application/ld+json"
+    dangerouslySetInnerHTML={{
+      __html: JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        itemListElement: [
+          {
+            "@type": "ListItem",
+            position: 1,
+            name: "Home",
+            item: "https://dev.pdfville.com",
+          },
+          {
+            "@type": "ListItem",
+            position: 2,
+            name: "Compress PDF",
+            item: "https://dev.pdfville.com/compress_pdf",
+          },
+        ],
+      }),
+    }}
+  />
+
+  <script
+    type="application/ld+json"
+    dangerouslySetInnerHTML={{
+      __html: JSON.stringify({
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "Brand",
+            name: "PDFVille",
+            url: "https://dev.pdfville.com",      
+            logo: "https://dev.pdfville.com/logo.png",
+          },
+        ],
+      }),
+    }}
+  />
+        {/* Product */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "Product",
+              name: "PDF Compressor",
+              description: "Online tool to compress PDF files.",
+              brand: "PDFVille",
+              url: "https://dev.pdfville.com/compress_pdf",
+            }),
+          }}
+        />
+{/* FAQPage */}
+<script
+  type="application/ld+json"
+  dangerouslySetInnerHTML={{
+    __html: JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      mainEntity: [
+        {
+          "@type": "Question",
+          name: "Can you compress a PDF?",
+          acceptedAnswer: {
+            "@type": "Answer",
+            text:
+              "Yes. Upload your PDF to PDFVille’s Compress tool, choose the desired compression level, and download a smaller, high-quality file."
+          }
+        },
+        {
+          "@type": "Question",
+          name: "Can you compress a PDF file size?",
+          acceptedAnswer: {
+            "@type": "Answer",
+            text:
+              "Absolutely. Our compressor reduces file size while keeping text and images clear, ideal for emailing or sharing online."
+          }
+        },
+        {
+          "@type": "Question",
+          name: "How do I reduce the size of a PDF without losing quality?",
+          acceptedAnswer: {
+            "@type": "Answer",
+            text:
+              "Use PDFVille’s “Compress PDF” feature. It optimizes images and fonts to shrink the file with minimal quality loss."
+          }
+        },
+        {
+          "@type": "Question",
+          name: "Can Adobe compress a PDF?",
+          acceptedAnswer: {
+            "@type": "Answer",
+            text:
+              "Yes, Adobe Acrobat has a “Reduce File Size” option, but PDFVille offers a free, browser-based alternative with no installation."
+          }
+        },
+        {
+          "@type": "Question",
+          name: "Is PDF compression safe?",
+          acceptedAnswer: {
+            "@type": "Answer",
+            text:
+              "Yes. Files are processed securely, and we automatically delete them from our servers after a short period."
+          }
+        },
+        {
+          "@type": "Question",
+          name: "Will compressing a PDF change its content?",
+          acceptedAnswer: {
+            "@type": "Answer",
+            text:
+              "No. The text and layout stay the same; only the file size and image resolution may be optimized."
+          }
+        },
+        {
+          "@type": "Question",
+          name: "What is the maximum file size I can upload for compression?",
+          acceptedAnswer: {
+            "@type": "Answer",
+            text:
+              "PDFVille supports uploads up to 200 MB per file."
+          }
+        },
+        {
+          "@type": "Question",
+          name: "Do I need to create an account to compress PDFs?",
+          acceptedAnswer: {
+            "@type": "Answer",
+            text:
+              "No account is required—just upload, compress, and download instantly."
+          }
+        },
+        {
+          "@type": "Question",
+          name: "Can I compress multiple PDFs at once?",
+          acceptedAnswer: {
+            "@type": "Answer",
+            text:
+              "Yes. Our batch-compress option lets you upload several PDFs and get all the compressed files in one download."
+          }
+        },
+        {
+          "@type": "Question",
+          name: "Does PDF compression work on mobile devices?",
+          acceptedAnswer: {
+            "@type": "Answer",
+            text:
+              "Yes. PDFVille’s web app works in any mobile browser on Android or iOS."
+          }
+        }
+      ]
+    }),
+  }}
+/>
+
+
+</Head>
+      {/* rest of your page content */}
+    
     <div style={styles.container}>
       <style jsx>{`
         @keyframes spin {
@@ -410,7 +629,7 @@ export default function CompressPage() {
 
       <div style={styles.maxWidth}>
         <button onClick={goBack} style={styles.backButton}>
-          ? Back to Home
+          ← Back to Home
         </button>
 
         <div style={styles.header}>
@@ -538,10 +757,11 @@ export default function CompressPage() {
             )}
           </div>
 
+
           {file && (
             <div style={styles.compressionSection}>
               <h2 style={styles.compressionTitle}>
-                <span style={{ fontSize: '28px', marginRight: '12px' }}>~</span>
+                <span style={{ fontSize: '28px', marginRight: '12px' }}>\u2699\uFE0F</span>
                 Compression Level
               </h2>
 
@@ -613,11 +833,8 @@ export default function CompressPage() {
         </div>
       </div>
     </div>
+    </>
   );
 }
 
-// /* UPGRADE MODAL RENDER */
-export function UpgradeModalRenderer({ show, msg, onClose }) {
-  if (!show) return null;
-  return <UpgradeModal message={msg} onClose={onClose} />;
-}
+// No need to define UpgradeModalRenderer here as it's already imported from UpgradeModal.js
