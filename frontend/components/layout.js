@@ -568,7 +568,7 @@ const MobileMenu = ({
     alignItems: "center",
     gap: "1rem", // Reduced gap from 1.25rem to 1rem
     position: "relative",
-    marginRight: "1rem", // Added right margin to push content left
+    marginRight: "2.5rem", // Added right margin to push content left
   }}
 >
   <div
