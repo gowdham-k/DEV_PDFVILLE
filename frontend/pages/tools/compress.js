@@ -774,7 +774,10 @@ export default function CompressPage() {
           {file && (
             <div style={styles.compressionSection}>
               <h2 style={styles.compressionTitle}>
-                <span style={{ fontSize: '28px', marginRight: '12px' }}>\u2699\uFE0F</span>
+                <span style={{ fontSize: '28px', marginRight: '12px' }}>
+  {'\u2699\uFE0F'}
+</span>
+
                 Compression Level
               </h2>
 
