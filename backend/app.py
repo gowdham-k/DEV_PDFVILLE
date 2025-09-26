@@ -82,23 +82,6 @@ else:
     origins = cors_origins.split(',')
     CORS(app, resources={r"/*": {"origins": origins}}, supports_credentials=True)
 
-@app.route(prefix_route("/api/translate-pdf"), methods=["POST"])
-def translate_pdf_api():
-    """Route for translating PDF files"""
-    return translate_pdf_route(request)
-
-# Health check endpoint
-@app.route('/health', methods=['GET'])
-def health_check():
-    return jsonify({
-        'status': 'healthy',
-        'environment': os.environ.get('FLASK_ENV', 'development'),
-        'timestamp': time.time()
-    })
-
-# Get API prefix from environment
-API_PREFIX = os.environ.get('API_PREFIX', '')
-
 # Configure AWS Cognito
 app.config['REGION'] = os.environ.get('REGION', "ap-southeast-2")
 app.config['USER_POOL_ID'] = os.environ.get('USER_POOL_ID', "ap-southeast-2_LeVlFHGOf")
