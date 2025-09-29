@@ -317,14 +317,18 @@ const MobileMenu = ({
   
   // Function to handle footer navigation with scroll to top
   const handleFooterNavigation = (path) => {
+    // For Next.js, use the router events to handle scrolling after navigation
+    const handleRouteChangeComplete = () => {
+      window.scrollTo(0, 0);
+      // Remove the event listener after it executes
+      router.events.off('routeChangeComplete', handleRouteChangeComplete);
+    };
+    
+    // Add the event listener before navigation
+    router.events.on('routeChangeComplete', handleRouteChangeComplete);
+    
     // Navigate to the path
-    router.push(path).then(() => {
-      // After navigation completes, scroll to the top of the page
-      window.scrollTo({
-        top: 0,
-        behavior: 'smooth'
-      });
-    });
+    router.push(path);
   };
 
   const handleAuthButton = () => {
