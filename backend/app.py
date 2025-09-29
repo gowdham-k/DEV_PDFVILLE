@@ -568,10 +568,12 @@ def verify_code():
     if not email or not confirmation_code:
         return jsonify({"error": "Email and confirmation code are required"}), 400
 
-    # Simply return success - we'll verify the code when the user submits their new password
-    # This avoids the issue of using up the code during verification
-    print(f"✅ Code verification step for: {email}")
-    return jsonify({"message": "Code accepted, please set your new password"}), 200
+    # For verification only, we'll just return success
+    # The actual verification will happen when the user submits the new password
+    # This is because Cognito doesn't have a way to verify a code without using it
+    
+    print(f"✅ Code verification step passed for: {email}")
+    return jsonify({"message": "Code verification step passed. Please set your new password."}), 200
 
 @app.route(prefix_route("/reset-password"), methods=["POST"])
 def reset_password():

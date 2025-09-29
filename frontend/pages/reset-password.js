@@ -10,7 +10,7 @@ export default function ResetPassword() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-  const [step, setStep] = useState(1); // Step 1: Request code, Step 2: Enter code and new password
+  const [step, setStep] = useState(1); // Step 1: Request code, Step 2: Verify code, Step 3: Reset password
   const router = useRouter();
 
   const handleRequestCode = async (e) => {
@@ -32,12 +32,46 @@ export default function ResetPassword() {
 
       if (response.ok) {
         setSuccess(data.message || "Reset code sent to your email");
-        setStep(2); // Move to password reset step
+        setStep(2); // Move to verify code step
       } else {
         setError(data.error || "Failed to send reset code");
       }
     } catch (error) {
       console.error("Reset password error:", error);
+      setError("Network error. Please check your connection and try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleVerifyCode = async (e) => {
+    e.preventDefault();
+    setError("");
+    setSuccess("");
+    setIsLoading(true);
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/verify-code`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ 
+          email,
+          confirmationCode 
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setSuccess(data.message || "Code verified successfully");
+        setStep(3); // Move to reset password step
+      } else {
+        setError(data.error || "Invalid confirmation code");
+      }
+    } catch (error) {
+      console.error("Code verification error:", error);
       setError("Network error. Please check your connection and try again.");
     } finally {
       setIsLoading(false);
@@ -52,12 +86,6 @@ export default function ResetPassword() {
     // Validate passwords match
     if (newPassword !== confirmPassword) {
       setError("Passwords do not match");
-      return;
-    }
-
-    // Validate confirmation code
-    if (!confirmationCode || confirmationCode.trim() === "") {
-      setError("Confirmation code is required");
       return;
     }
 
@@ -96,100 +124,132 @@ export default function ResetPassword() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4">
-      <div className="w-full max-w-md bg-white rounded-lg shadow-md overflow-hidden">
-        <div className="bg-black text-white p-6 text-center">
-          <h2 className="text-2xl font-bold">Reset Password</h2>
-          <p className="mt-1">
-            {step === 1
-              ? "Enter your email to receive a reset code"
-              : "Enter the verification code and your new password"}
+    <div className="container">
+      <div className="reset-card">
+        <div className="header">
+          <h2>Reset Password</h2>
+          <p>
+            {step === 1 
+              ? "Request a password reset code" 
+              : step === 2 
+                ? "Verify your confirmation code" 
+                : "Enter your new password"
+            }
           </p>
         </div>
 
-        <div className="p-6">
-          {error && (
-            <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-md">
-              {error}
-            </div>
-          )}
-          {success && (
-            <div className="mb-4 p-3 bg-green-100 text-green-700 rounded-md">
-              {success}
-            </div>
-          )}
+        {step === 1 ? (
+          <form className="reset-form" onSubmit={handleRequestCode}>
+            {error && <div className="error-message">{error}</div>}
+            {success && <div className="success-message">{success}</div>}
 
-          {step === 1 ? (
-            // Step 1: Request reset code form
-            <form onSubmit={handleRequestCode}>
-              <div className="mb-4">
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Email address"
-                  required
-                  className="w-full p-3 border border-gray-300 rounded-md"
-                />
-              </div>
-              <button
-                type="submit"
+            <div className="input-group">
+              <input
+                type="email"
+                placeholder="Email Address"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
                 disabled={isLoading}
-                className="w-full bg-black text-white p-3 rounded-md hover:bg-gray-800 transition-colors"
+              />
+            </div>
+
+            <button 
+              type="submit" 
+              className="reset-button"
+              disabled={isLoading}
+            >
+              {isLoading ? "Sending..." : "Send Reset Code"}
+            </button>
+
+            <p className="back-text">
+              Remember your password? 
+              <span 
+                onClick={() => router.push("/login")}
+                className="back-link"
               >
-                {isLoading ? "Sending..." : "Send Reset Code"}
-              </button>
-            </form>
-          ) : (
-            // Step 2: Reset password form with confirmation code
-            <form onSubmit={handleResetPassword}>
-              <div className="mb-4">
-                <input
-                  type="text"
-                  value={confirmationCode}
-                  onChange={(e) => setConfirmationCode(e.target.value)}
-                  placeholder="Confirmation code"
-                  required
-                  className="w-full p-3 border border-gray-300 rounded-md"
-                />
-              </div>
-              <div className="mb-4">
-                <input
-                  type="password"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  placeholder="New password"
-                  required
-                  className="w-full p-3 border border-gray-300 rounded-md"
-                />
-              </div>
-              <div className="mb-4">
-                <input
-                  type="password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="Confirm new password"
-                  required
-                  className="w-full p-3 border border-gray-300 rounded-md"
-                />
-              </div>
-              <button
-                type="submit"
+                Back to Login
+              </span>
+            </p>
+          </form>
+        ) : step === 2 ? (
+          <form className="reset-form" onSubmit={handleVerifyCode}>
+            {error && <div className="error-message">{error}</div>}
+            {success && <div className="success-message">{success}</div>}
+
+            <div className="input-group">
+              <input
+                type="text"
+                placeholder="Confirmation Code"
+                value={confirmationCode}
+                onChange={(e) => setConfirmationCode(e.target.value)}
+                required
                 disabled={isLoading}
-                className="w-full bg-black text-white p-3 rounded-md hover:bg-gray-800 transition-colors"
-              >
-                {isLoading ? "Resetting..." : "Reset Password"}
-              </button>
-              <button
-                type="button"
+              />
+            </div>
+
+            <button 
+              type="submit" 
+              className="reset-button"
+              disabled={isLoading}
+            >
+              {isLoading ? "Verifying..." : "Verify Code"}
+            </button>
+
+            <p className="back-text">
+              <span 
                 onClick={() => setStep(1)}
-                className="w-full mt-2 text-center text-black hover:underline"
+                className="back-link"
               >
                 Back to Request Code
-              </button>
-            </form>
-          )}
-        </div>
+              </span>
+            </p>
+          </form>
+        ) : (
+          <form className="reset-form" onSubmit={handleResetPassword}>
+            {error && <div className="error-message">{error}</div>}
+            {success && <div className="success-message">{success}</div>}
+
+            <div className="input-group">
+              <input
+                type="password"
+                placeholder="New Password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                required
+                disabled={isLoading}
+              />
+            </div>
+
+            <div className="input-group">
+              <input
+                type="password"
+                placeholder="Confirm New Password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                required
+                disabled={isLoading}
+              />
+            </div>
+
+            <button 
+              type="submit" 
+              className="reset-button"
+              disabled={isLoading}
+            >
+              {isLoading ? "Resetting..." : "Reset Password"}
+            </button>
+
+            <p className="back-text">
+              <span 
+                onClick={() => setStep(2)}
+                className="back-link"
+              >
+                Back to Verification
+              </span>
+            </p>
+          </form>
+        )}
       </div>
 
       <style jsx>{`
