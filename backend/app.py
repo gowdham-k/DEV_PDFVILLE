@@ -568,45 +568,10 @@ def verify_code():
     if not email or not confirmation_code:
         return jsonify({"error": "Email and confirmation code are required"}), 400
 
-    try:
-        # We can't directly verify the code with Cognito without resetting the password
-        # So we'll check if the user and code exist by making a dummy request to Cognito
-        # with a temporary password that will be immediately changed in the actual reset
-        temp_password = "Temp1234!" + str(random.randint(1000, 9999))
-        
-        # Try to confirm forgot password with the code
-        # If the code is invalid, Cognito will throw an exception
-        cognito.confirm_forgot_password(
-            ClientId=APP_CLIENT_ID,
-            Username=email,
-            ConfirmationCode=confirmation_code,
-            Password=temp_password,
-            SecretHash=get_secret_hash(email)
-        )
-        
-        # If we get here, the code was valid, but we've already used it to reset the password
-        # So we need to initiate a new password reset to get a new code
-        cognito.forgot_password(
-            ClientId=APP_CLIENT_ID,
-            Username=email,
-            SecretHash=get_secret_hash(email)
-        )
-        
-        print(f"✅ Code verification successful for: {email}")
-        return jsonify({"message": "Code verified successfully. A new code has been sent to your email."}), 200
-    
-    except cognito.exceptions.CodeMismatchException:
-        print(f"❌ Invalid confirmation code for: {email}")
-        return jsonify({"error": "Invalid confirmation code"}), 400
-    except cognito.exceptions.UserNotFoundException:
-        print(f"❌ User not found for code verification: {email}")
-        return jsonify({"error": "User not found"}), 404
-    except cognito.exceptions.ExpiredCodeException:
-        print(f"❌ Expired confirmation code for: {email}")
-        return jsonify({"error": "Confirmation code has expired. Please request a new code."}), 400
-    except Exception as e:
-        print(f"❌ Code verification error for {email}: {str(e)}")
-        return jsonify({"error": f"Code verification failed: {str(e)}"}), 400
+    # Simply return success - we'll verify the code when the user submits their new password
+    # This avoids the issue of using up the code during verification
+    print(f"✅ Code verification step for: {email}")
+    return jsonify({"message": "Code accepted, please set your new password"}), 200
 
 @app.route(prefix_route("/reset-password"), methods=["POST"])
 def reset_password():
