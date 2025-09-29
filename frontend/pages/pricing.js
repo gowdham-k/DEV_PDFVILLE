@@ -126,7 +126,8 @@ export default function PricingPage() {
     setLoading(true);
     
     try {
-      const response = await fetch(`/api/create-checkout-session`, {
+      // Use the full API URL instead of relative path
+      const response = await fetch(`${API_BASE_URL}/api/create-checkout-session`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
