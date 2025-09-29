@@ -10,11 +10,11 @@ DB_NAME = os.environ.get('DB_NAME', 'pdfville')
 DB_USER = os.environ.get('DB_USER', 'postgres')
 DB_PASSWORD = os.environ.get('DB_PASSWORD', 'password')
 
-DB_HOST=pdfville-db.cj8c6y2y6a28.ap-southeast-2.rds.amazonaws.com
+DB_HOST="pdfville-db.cj8c6y2y6a28.ap-southeast-2.rds.amazonaws.com"
 DB_PORT=5432
-DB_NAME=pdfville_db
-DB_USER=postgres
-DB_PASSWORD=1071HqoqFj5zvWMCtwS8
+DB_NAME="pdfville_db"
+DB_USER="postgres"
+DB_PASSWORD="1071HqoqFj5zvWMCtwS8"
 
 # For AWS RDS PostgreSQL, the connection string format is:
 # postgresql://username:password@hostname:port/database_name
