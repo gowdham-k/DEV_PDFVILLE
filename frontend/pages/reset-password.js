@@ -50,32 +50,10 @@ export default function ResetPassword() {
     setSuccess("");
     setIsLoading(true);
 
-    try {
-      const response = await fetch(`${API_BASE_URL}/verify-code`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email,
-          confirmationCode,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        setSuccess(data.message || "Code verified successfully");
-        setStep(3); // Move to reset password step
-      } else {
-        setError(data.error || "Invalid verification code");
-      }
-    } catch (error) {
-      console.error("Code verification error:", error);
-      setError("Network error. Please check your connection and try again.");
-    } finally {
-      setIsLoading(false);
-    }
+    // Instead of making a separate verification call, we'll just move to the next step
+    // The actual verification will happen when the user submits the new password
+    setStep(3); // Move to reset password step
+    setIsLoading(false);
   };
 
   const handleResetPassword = async (e) => {
