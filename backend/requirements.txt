@@ -36,3 +36,5 @@ pytesseract
 reportlab
 requests
 Werkzeug
+psycopg2-binary
+SQLAlchemy

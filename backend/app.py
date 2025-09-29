@@ -13,6 +13,11 @@ from flask import request
 from jose import jwt
 import requests
 from dotenv import load_dotenv
+
+# Database imports
+from db_config import engine, Base, get_db
+from models import User, File
+import db_utils
 from convert_to_png import convert_pdf_to_png
 from merge_pdf import merge_pdfs
 from split_pdf import split_pdf
@@ -43,6 +48,8 @@ from edit_pdf import edit_pdf
 
 
 from functools import wraps
+from sqlalchemy.orm import Session
+from datetime import datetime
 import hmac
 import hashlib
 import base64
@@ -90,6 +97,129 @@ app.config['REGION'] = os.environ.get('REGION', "ap-southeast-2")
 app.config['USER_POOL_ID'] = os.environ.get('USER_POOL_ID', "ap-southeast-2_LeVlFHGOf")
 app.config['APP_CLIENT_ID'] = os.environ.get('APP_CLIENT_ID', "1u8apgpumk8dbnkeaomu9alv67")
 app.config['APP_CLIENT_SECRET'] = os.environ.get('APP_CLIENT_SECRET', "1idscabr0beu9v3fqfffsm3mbggif1j9jjlnpnp3pk09mhphk96p")
+
+# Initialize database
+@app.before_first_request
+def initialize_database():
+    Base.metadata.create_all(bind=engine)
+    
+# User management routes
+@app.route('/api/users', methods=['POST'])
+def create_user_route():
+    data = request.json
+    db = next(get_db())
+    
+    try:
+        # Check if user already exists
+        existing_user = db_utils.get_user_by_email(db, data['email'])
+        if existing_user:
+            return jsonify({"error": "User already exists"}), 400
+            
+        # Create new user
+        user = db_utils.create_user(
+            db,
+            email=data['email'],
+            cognito_id=data.get('cognito_id', ''),
+            first_name=data.get('first_name', ''),
+            last_name=data.get('last_name', ''),
+            phone_number=data.get('phone_number', '')
+        )
+        
+        return jsonify({
+            "id": user.id,
+            "email": user.email,
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+            "created_at": user.created_at.isoformat()
+        }), 201
+        
+    except Exception as e:
+        db.rollback()
+        return jsonify({"error": str(e)}), 500
+    finally:
+        db.close()
+
+@app.route('/api/users/<int:user_id>', methods=['GET'])
+def get_user_route(user_id):
+    db = next(get_db())
+    
+    try:
+        user = db_utils.get_user_by_id(db, user_id)
+        if not user:
+            return jsonify({"error": "User not found"}), 404
+            
+        return jsonify({
+            "id": user.id,
+            "email": user.email,
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+            "phone_number": user.phone_number,
+            "is_premium": user.is_premium,
+            "subscription_status": user.subscription_status,
+            "created_at": user.created_at.isoformat()
+        })
+        
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    finally:
+        db.close()
+
+@app.route('/api/users/<int:user_id>', methods=['PUT'])
+def update_user_route(user_id):
+    data = request.json
+    db = next(get_db())
+    
+    try:
+        user = db_utils.get_user_by_id(db, user_id)
+        if not user:
+            return jsonify({"error": "User not found"}), 404
+            
+        # Update user fields
+        if 'first_name' in data:
+            user.first_name = data['first_name']
+        if 'last_name' in data:
+            user.last_name = data['last_name']
+        if 'phone_number' in data:
+            user.phone_number = data['phone_number']
+        if 'profile_picture' in data:
+            user.profile_picture = data['profile_picture']
+        
+        user.updated_at = datetime.utcnow()
+        db.commit()
+        
+        return jsonify({
+            "id": user.id,
+            "email": user.email,
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+            "updated_at": user.updated_at.isoformat()
+        })
+        
+    except Exception as e:
+        db.rollback()
+        return jsonify({"error": str(e)}), 500
+    finally:
+        db.close()
+
+@app.route('/api/users/<int:user_id>/files', methods=['GET'])
+def get_user_files_route(user_id):
+    db = next(get_db())
+    
+    try:
+        files = db_utils.get_user_files(db, user_id)
+        
+        return jsonify([{
+            "id": file.id,
+            "filename": file.filename,
+            "file_type": file.file_type,
+            "file_size": file.file_size,
+            "created_at": file.created_at.isoformat()
+        } for file in files])
+        
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    finally:
+        db.close()
 
 
 
@@ -240,6 +370,20 @@ def signup():
             SecretHash=get_secret_hash(email),
             UserAttributes=user_attributes
         )
+        
+        # Store user in PostgreSQL database
+        db = next(get_db())
+        try:
+            # Check if user already exists in database
+            existing_user = db_utils.get_user_by_email(db, email)
+            if not existing_user:
+                # Create new user in database
+                db_utils.create_user(db, email, response["UserSub"])
+                print(f"✅ User stored in database: {email}")
+        except Exception as db_error:
+            print(f"⚠️ Database error: {str(db_error)}")
+            # Continue even if database storage fails
+            # User is already created in Cognito
         
         print(f"✅ User created successfully: {email}")
         return jsonify({
