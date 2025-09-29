@@ -314,6 +314,18 @@ const MobileMenu = ({
     setIsOpen(false);
     setActiveSubmenu(null);
   };
+  
+  // Function to handle footer navigation with scroll to top
+  const handleFooterNavigation = (path) => {
+    // Navigate to the path
+    router.push(path).then(() => {
+      // After navigation completes, scroll to the top of the page
+      window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+      });
+    });
+  };
 
   const handleAuthButton = () => {
     console.log("Auth button clicked, isAuthenticated:", isAuthenticated);
@@ -685,19 +697,19 @@ const MobileMenu = ({
                 <h3 style={{ fontSize: "1rem", fontWeight: "600", marginBottom: "1rem" }}>PRODUCT</h3>
                 <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
                   <li style={{ marginBottom: "0.5rem" }}>
-                    <div onClick={() => router.push("/")} style={{ cursor: "pointer", fontSize: "0.9rem" }}>Home</div>
+                    <div onClick={() => handleFooterNavigation("/")} style={{ cursor: "pointer", fontSize: "0.9rem" }}>Home</div>
                   </li>
                   <li style={{ marginBottom: "0.5rem" }}>
-                    <div onClick={() => router.push("/features")} style={{ cursor: "pointer", fontSize: "0.9rem" }}>Features</div>
+                    <div onClick={() => handleFooterNavigation("/features")} style={{ cursor: "pointer", fontSize: "0.9rem" }}>Features</div>
                   </li>
                   <li style={{ marginBottom: "0.5rem" }}>
-                    <div onClick={() => router.push("/pricing")} style={{ cursor: "pointer", fontSize: "0.9rem" }}>Pricing</div>
+                    <div onClick={() => handleFooterNavigation("/pricing")} style={{ cursor: "pointer", fontSize: "0.9rem" }}>Pricing</div>
                   </li>
                   <li style={{ marginBottom: "0.5rem" }}>
-                    <div onClick={() => router.push("/tools")} style={{ cursor: "pointer", fontSize: "0.9rem" }}>Tools</div>
+                    <div onClick={() => handleFooterNavigation("/tools")} style={{ cursor: "pointer", fontSize: "0.9rem" }}>Tools</div>
                   </li>
                   <li style={{ marginBottom: "0.5rem" }}>
-                    <div onClick={() => router.push("/faq")} style={{ cursor: "pointer", fontSize: "0.9rem" }}>FAQ</div>
+                    <div onClick={() => handleFooterNavigation("/faq")} style={{ cursor: "pointer", fontSize: "0.9rem" }}>FAQ</div>
                   </li>
                 </ul>
               </div>
@@ -729,10 +741,10 @@ const MobileMenu = ({
                 <h3 style={{ fontSize: "1rem", fontWeight: "600", marginBottom: "1rem" }}>SOLUTIONS</h3>
                 <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
                   <li style={{ marginBottom: "0.5rem" }}>
-                    <div onClick={() => router.push("/business")} style={{ cursor: "pointer", fontSize: "0.9rem" }}>Business</div>
+                    <div onClick={() => handleFooterNavigation("/business")} style={{ cursor: "pointer", fontSize: "0.9rem" }}>Business</div>
                   </li>
                   <li style={{ marginBottom: "0.5rem" }}>
-                    <div onClick={() => router.push("/education")} style={{ cursor: "pointer", fontSize: "0.9rem" }}>Education</div>
+                    <div onClick={() => handleFooterNavigation("/education")} style={{ cursor: "pointer", fontSize: "0.9rem" }}>Education</div>
                   </li>
                 </ul>
               </div>
@@ -742,16 +754,16 @@ const MobileMenu = ({
                 <h3 style={{ fontSize: "1rem", fontWeight: "600", marginBottom: "1rem" }}>LEGAL</h3>
                 <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
                   <li style={{ marginBottom: "0.5rem" }}>
-                    <div onClick={() => router.push("/security")} style={{ cursor: "pointer", fontSize: "0.9rem" }}>Security</div>
+                    <div onClick={() => handleFooterNavigation("/security")} style={{ cursor: "pointer", fontSize: "0.9rem" }}>Security</div>
                   </li>
                   <li style={{ marginBottom: "0.5rem" }}>
-                    <div onClick={() => router.push("/privacy_policy")} style={{ cursor: "pointer", fontSize: "0.9rem" }}>Privacy policy</div>
+                    <div onClick={() => handleFooterNavigation("/privacy_policy")} style={{ cursor: "pointer", fontSize: "0.9rem" }}>Privacy policy</div>
                   </li>
                   <li style={{ marginBottom: "0.5rem" }}>
-                    <div onClick={() => router.push("/terms")} style={{ cursor: "pointer", fontSize: "0.9rem" }}>Terms & conditions</div>
+                    <div onClick={() => handleFooterNavigation("/terms")} style={{ cursor: "pointer", fontSize: "0.9rem" }}>Terms & conditions</div>
                   </li>
                   <li style={{ marginBottom: "0.5rem" }}>
-                    <div onClick={() => router.push("/cookies")} style={{ cursor: "pointer", fontSize: "0.9rem" }}>Cookies</div>
+                    <div onClick={() => handleFooterNavigation("/cookies")} style={{ cursor: "pointer", fontSize: "0.9rem" }}>Cookies</div>
                   </li>
                 </ul>
               </div>
@@ -761,16 +773,16 @@ const MobileMenu = ({
                 <h3 style={{ fontSize: "1rem", fontWeight: "600", marginBottom: "1rem" }}>COMPANY</h3>
                 <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
                   <li style={{ marginBottom: "0.5rem" }}>
-                    <div onClick={() => router.push("/about")} style={{ cursor: "pointer", fontSize: "0.9rem" }}>About us</div>
+                    <div onClick={() => handleFooterNavigation("/about")} style={{ cursor: "pointer", fontSize: "0.9rem" }}>About us</div>
                   </li>
                   <li style={{ marginBottom: "0.5rem" }}>
-                    <div onClick={() => router.push("/contact")} style={{ cursor: "pointer", fontSize: "0.9rem" }}>Contact us</div>
+                    <div onClick={() => handleFooterNavigation("/contact")} style={{ cursor: "pointer", fontSize: "0.9rem" }}>Contact us</div>
                   </li>
                   <li style={{ marginBottom: "0.5rem" }}>
-                    <div onClick={() => router.push("/blog")} style={{ cursor: "pointer", fontSize: "0.9rem" }}>Blog</div>
+                    <div onClick={() => handleFooterNavigation("/blog")} style={{ cursor: "pointer", fontSize: "0.9rem" }}>Blog</div>
                   </li>
                   <li style={{ marginBottom: "0.5rem" }}>
-                    <div onClick={() => router.push("/press")} style={{ cursor: "pointer", fontSize: "0.9rem" }}>Press</div>
+                    <div onClick={() => handleFooterNavigation("/press")} style={{ cursor: "pointer", fontSize: "0.9rem" }}>Press</div>
                   </li>
                 </ul>
               </div>
