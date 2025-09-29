@@ -92,7 +92,7 @@ export default function TermsAndConditions() {
           </p>
 
           <p style={{ marginTop: '2rem', fontSize: '0.9rem', color: '#666', textAlign: 'center' }}>
-            Last updated: November 15, 2023
+            Last updated: september 29, 2025
           </p>
         </div>
       </div>
