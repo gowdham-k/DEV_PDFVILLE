@@ -99,9 +99,12 @@ app.config['APP_CLIENT_ID'] = os.environ.get('APP_CLIENT_ID', "1u8apgpumk8dbnkea
 app.config['APP_CLIENT_SECRET'] = os.environ.get('APP_CLIENT_SECRET', "1idscabr0beu9v3fqfffsm3mbggif1j9jjlnpnp3pk09mhphk96p")
 
 # Initialize database
-@app.before_first_request
 def initialize_database():
     Base.metadata.create_all(bind=engine)
+
+# Create tables at startup
+with app.app_context():
+    initialize_database()
     
 # User management routes
 @app.route('/api/users', methods=['POST'])
