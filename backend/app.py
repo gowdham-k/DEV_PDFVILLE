@@ -77,6 +77,7 @@ else:
 
 # Then load any local overrides
 load_dotenv('.env.local', override=True)
+load_dotenv('.env', override=True)
 
 # Initialize Flask app
 app = Flask(__name__)
