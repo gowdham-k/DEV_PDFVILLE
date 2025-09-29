@@ -10,5 +10,4 @@ venv/
 *.pyc
 
 # Environment
-.env
 *.log
