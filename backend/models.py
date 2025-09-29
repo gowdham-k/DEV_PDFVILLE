@@ -20,6 +20,13 @@ class User(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
+    # Payment information
+    payment_id = Column(String, nullable=True)
+    payment_amount = Column(Integer, nullable=True)
+    payment_date = Column(DateTime, nullable=True)
+    payment_method = Column(String, nullable=True)
+    payment_status = Column(String, nullable=True)
+    
     # Relationship with user files
     files = relationship("File", back_populates="owner")
 

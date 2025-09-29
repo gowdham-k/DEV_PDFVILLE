@@ -638,6 +638,33 @@ def stripe_webhook():
                 # Use the new function to update Cognito
                 if set_pro_subscription(customer_email, True):
                     print(f"[Stripe Webhook] Successfully upgraded {customer_email} in Cognito.")
+                    
+                    # Store payment data in database
+                    try:
+                        db = next(get_db())
+                        
+                        # Calculate subscription expiry (1 year from now)
+                        from datetime import datetime, timedelta
+                        subscription_expiry = datetime.utcnow() + timedelta(days=365)
+                        
+                        # Prepare payment data
+                        payment_data = {
+                            'payment_id': session.get('id'),
+                            'payment_amount': session.get('amount_total'),
+                            'payment_date': datetime.utcnow(),
+                            'payment_method': session.get('payment_method_types', ['card'])[0],
+                            'payment_status': 'completed',
+                            'subscription_expiry': subscription_expiry
+                        }
+                        
+                        # Update user payment info in database
+                        updated_user = db_utils.update_user_payment_info(db, customer_email, payment_data)
+                        if updated_user:
+                            print(f"[Stripe Webhook] Successfully stored payment data for {customer_email} in database.")
+                        else:
+                            print(f"[Stripe Webhook] Failed to store payment data for {customer_email} in database.")
+                    except Exception as db_error:
+                        print(f"[Stripe Webhook] Database error: {db_error}")
                 else:
                     print(f"[Stripe Webhook] Failed to upgrade {customer_email} in Cognito.")
         return jsonify({'status': 'ok'}), 200

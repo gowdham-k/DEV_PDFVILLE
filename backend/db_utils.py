@@ -40,6 +40,27 @@ def update_user_subscription_status(db: Session, user_id: int, is_pro: bool) -> 
         db.refresh(db_user)
     return db_user
 
+# Payment operations
+def update_user_payment_info(db: Session, email: str, payment_data: dict) -> Optional[User]:
+    """Update user payment information after successful payment"""
+    db_user = get_user_by_email(db, email)
+    if db_user:
+        # Update payment information
+        db_user.payment_id = payment_data.get('payment_id')
+        db_user.payment_amount = payment_data.get('payment_amount')
+        db_user.payment_date = payment_data.get('payment_date')
+        db_user.payment_method = payment_data.get('payment_method')
+        db_user.payment_status = payment_data.get('payment_status')
+        
+        # Update subscription information
+        db_user.is_pro = True
+        db_user.subscription_status = "pro"
+        db_user.subscription_expiry = payment_data.get('subscription_expiry')
+        
+        db.commit()
+        db.refresh(db_user)
+    return db_user
+
 # File operations
 def get_user_files(db: Session, user_id: int) -> List[File]:
     """Get all files for a user"""
