@@ -620,16 +620,21 @@ def test_cognito_upgrade():
         return jsonify({"error": f"Failed to fetch user: {str(e)}"}), 500
 
 
-# ... existing stripe_webhook ...
+# Stripe webhook handler
 @app.route('/stripe/webhook', methods=['POST'])
 def stripe_webhook():
     payload = request.data
     sig_header = request.headers.get('Stripe-Signature')
-    # You should verify signature with stripe SDK in production
+    
+    # Get the webhook secret from environment variables
+    webhook_secret = os.environ.get('STRIPE_WEBHOOK_SECRET')
+    
     try:
-        event = None
-        data = request.get_json(silent=True) or {}
-        event = data
+        # Verify the webhook signature
+        import stripe
+        event = stripe.Webhook.construct_event(
+            payload, sig_header, webhook_secret
+        )
         # Example handling
         if event.get('type') == 'checkout.session.completed':
             session = event.get('data', {}).get('object', {})
