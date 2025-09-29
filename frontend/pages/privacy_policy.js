@@ -1,10 +1,9 @@
 import React from 'react';
-import Layout from '../components/layout';
 import Head from 'next/head';
 
 export default function PrivacyPolicy() {
   return (
-    <Layout>
+    <>
       <Head>
         <title>Privacy Policy - PDFVille</title>
         <meta name="description" content="PDFVille Privacy Policy" />
@@ -75,6 +74,6 @@ export default function PrivacyPolicy() {
           Address: 123 PDF Street, Document City, DC 12345
         </p>
       </div>
-    </Layout>
+    </>
   );
 }

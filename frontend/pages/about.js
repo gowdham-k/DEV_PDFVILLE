@@ -1,10 +1,9 @@
 import React from 'react';
-import Layout from '../components/layout';
 import Head from 'next/head';
 
 export default function About() {
   return (
-    <Layout>
+    <>
       <Head>
         <title>About Us - PDFVille</title>
         <meta name="description" content="About PDFVille" />
@@ -40,6 +39,6 @@ export default function About() {
           <li>Environmental responsibility</li>
         </ul>
       </div>
-    </Layout>
+    </>
   );
 }

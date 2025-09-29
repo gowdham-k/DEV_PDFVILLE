@@ -1,10 +1,9 @@
 import React from 'react';
-import Layout from '../components/layout';
 import Head from 'next/head';
 
 export default function Tools() {
   return (
-    <Layout>
+    <>
       <Head>
         <title>Tools - PDFVille</title>
         <meta name="description" content="PDFVille Tools" />
@@ -45,6 +44,6 @@ export default function Tools() {
           </div>
         </div>
       </div>
-    </Layout>
+    </>
   );
 }

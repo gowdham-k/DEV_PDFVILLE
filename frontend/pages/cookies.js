@@ -1,10 +1,9 @@
 import React from 'react';
-import Layout from '../components/layout';
 import Head from 'next/head';
 
 export default function Cookies() {
   return (
-    <Layout>
+    <>
       <Head>
         <title>Cookies Policy - PDFVille</title>
         <meta name="description" content="PDFVille Cookies Policy" />
@@ -54,6 +53,6 @@ export default function Cookies() {
           If you disable or refuse cookies, please note that some parts of this website may become inaccessible or not function properly.
         </p>
       </div>
-    </Layout>
+    </>
   );
 }

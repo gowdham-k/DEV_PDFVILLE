@@ -1,10 +1,9 @@
 import React from 'react';
-import Layout from '../components/layout';
 import Head from 'next/head';
 
 export default function Education() {
   return (
-    <Layout>
+    <>
       <Head>
         <title>Education Solutions - PDFVille</title>
         <meta name="description" content="PDFVille Education Solutions" />
@@ -45,6 +44,6 @@ export default function Education() {
           </p>
         </div>
       </div>
-    </Layout>
+    </>
   );
 }

@@ -1,10 +1,9 @@
 import React from 'react';
-import Layout from '../components/layout';
 import Head from 'next/head';
 
 export default function Security() {
   return (
-    <Layout>
+    <>
       <Head>
         <title>Security - PDFVille</title>
         <meta name="description" content="PDFVille Security Information" />
@@ -54,6 +53,6 @@ export default function Security() {
           Email: security@pdfville.com
         </p>
       </div>
-    </Layout>
+    </>
   );
 }

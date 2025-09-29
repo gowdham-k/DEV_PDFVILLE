@@ -1,10 +1,9 @@
 import React from 'react';
-import Layout from '../components/layout';
 import Head from 'next/head';
 
 export default function Features() {
   return (
-    <Layout>
+    <>
       <Head>
         <title>Features - PDFVille</title>
         <meta name="description" content="PDFVille Features" />
@@ -55,6 +54,6 @@ export default function Features() {
           </p>
         </div>
       </div>
-    </Layout>
+    </>
   );
 }

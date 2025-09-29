@@ -1,10 +1,9 @@
 import React from 'react';
-import Layout from '../components/layout';
 import Head from 'next/head';
 
 export default function Business() {
   return (
-    <Layout>
+    <>
       <Head>
         <title>Business Solutions - PDFVille</title>
         <meta name="description" content="PDFVille Business Solutions" />
@@ -49,6 +48,6 @@ export default function Business() {
           </p>
         </div>
       </div>
-    </Layout>
+    </>
   );
 }

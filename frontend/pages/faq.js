@@ -1,10 +1,9 @@
 import React from 'react';
-import Layout from '../components/layout';
 import Head from 'next/head';
 
 export default function FAQ() {
   return (
-    <Layout>
+    <>
       <Head>
         <title>FAQ - PDFVille</title>
         <meta name="description" content="Frequently Asked Questions about PDFVille" />
@@ -55,6 +54,6 @@ export default function FAQ() {
           </p>
         </div>
       </div>
-    </Layout>
+    </>
   );
 }
