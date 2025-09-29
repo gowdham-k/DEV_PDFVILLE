@@ -147,14 +147,20 @@ export default function PricingPage() {
       }
 
       // Redirect to Stripe Checkout
-      const stripe = await stripePromise;
-      const { error } = await stripe.redirectToCheckout({
-        sessionId: session.sessionId,
-      });
+      if (session.url) {
+        // Use the URL directly if available
+        window.location.href = session.url;
+      } else {
+        // Fall back to the old method if url is not available
+        const stripe = await stripePromise;
+        const { error } = await stripe.redirectToCheckout({
+          sessionId: session.sessionId,
+        });
 
-      if (error) {
-        console.error('Stripe redirect error:', error);
-        alert('Payment redirect failed. Please try again.');
+        if (error) {
+          console.error('Stripe redirect error:', error);
+          alert('Payment redirect failed. Please try again.');
+        }
       }
     } catch (error) {
       console.error('Subscription error:', error);
