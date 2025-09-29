@@ -10,7 +10,7 @@ export default function ResetPassword() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-  const [step, setStep] = useState(1); // Step 1: Request code, Step 2: Reset password
+  const [step, setStep] = useState(1); // Step 1: Request code, Step 2: Verify code, Step 3: Reset password
   const router = useRouter();
 
   const handleRequestCode = async (e) => {
@@ -32,12 +32,46 @@ export default function ResetPassword() {
 
       if (response.ok) {
         setSuccess(data.message || "Reset code sent to your email");
-        setStep(2); // Move to reset password step
+        setStep(2); // Move to verify code step
       } else {
         setError(data.error || "Failed to send reset code");
       }
     } catch (error) {
       console.error("Reset password error:", error);
+      setError("Network error. Please check your connection and try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleVerifyCode = async (e) => {
+    e.preventDefault();
+    setError("");
+    setSuccess("");
+    setIsLoading(true);
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/verify-code`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email,
+          confirmationCode,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setSuccess(data.message || "Code verified successfully");
+        setStep(3); // Move to reset password step
+      } else {
+        setError(data.error || "Invalid verification code");
+      }
+    } catch (error) {
+      console.error("Code verification error:", error);
       setError("Network error. Please check your connection and try again.");
     } finally {
       setIsLoading(false);
@@ -94,7 +128,14 @@ export default function ResetPassword() {
       <div className="reset-card">
         <div className="header">
           <h2>Reset Password</h2>
-          <p>{step === 1 ? "Request a password reset code" : "Enter your code and new password"}</p>
+          <p>
+            {step === 1 
+              ? "Request a password reset code" 
+              : step === 2 
+                ? "Verify your confirmation code" 
+                : "Enter your new password"
+            }
+          </p>
         </div>
 
         {step === 1 ? (
@@ -131,8 +172,8 @@ export default function ResetPassword() {
               </span>
             </p>
           </form>
-        ) : (
-          <form className="reset-form" onSubmit={handleResetPassword}>
+        ) : step === 2 ? (
+          <form className="reset-form" onSubmit={handleVerifyCode}>
             {error && <div className="error-message">{error}</div>}
             {success && <div className="success-message">{success}</div>}
 
@@ -146,6 +187,28 @@ export default function ResetPassword() {
                 disabled={isLoading}
               />
             </div>
+
+            <button 
+              type="submit" 
+              className="reset-button"
+              disabled={isLoading}
+            >
+              {isLoading ? "Verifying..." : "Verify Code"}
+            </button>
+
+            <p className="back-text">
+              <span 
+                onClick={() => setStep(1)}
+                className="back-link"
+              >
+                Back to Request Code
+              </span>
+            </p>
+          </form>
+        ) : (
+          <form className="reset-form" onSubmit={handleResetPassword}>
+            {error && <div className="error-message">{error}</div>}
+            {success && <div className="success-message">{success}</div>}
 
             <div className="input-group">
               <input
@@ -179,10 +242,10 @@ export default function ResetPassword() {
 
             <p className="back-text">
               <span 
-                onClick={() => setStep(1)}
+                onClick={() => setStep(2)}
                 className="back-link"
               >
-                Back to Request Code
+                Back to Verification
               </span>
             </p>
           </form>
