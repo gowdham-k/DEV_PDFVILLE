@@ -6,7 +6,8 @@ from flask import current_app # Import current_app to access app config
 
 def set_premium_cognito(email, is_premium_=True):
     """
-    Updates a user's custom:is_premium_ attribute in AWS Cognito.
+    Updates a user's subscription status in AWS Cognito.
+    Note: Function name kept for backward compatibility, but now sets pro status.
     """
     cognito_client = boto3.client("cognito-idp", region_name="ap-southeast-2")
     user_pool_id = current_app.config['USER_POOL_ID']

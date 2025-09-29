@@ -54,7 +54,7 @@ import hmac
 import hashlib
 import base64
 from restrictions import check_restrictions, get_user
-from cognito_utils import set_premium_cognito # Add this line
+from cognito_utils import set_premium_cognito as set_pro_subscription # Add this line
     # ...
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
@@ -157,7 +157,7 @@ def get_user_route(user_id):
             "first_name": user.first_name,
             "last_name": user.last_name,
             "phone_number": user.phone_number,
-            "is_premium": user.is_premium,
+            "is_pro": user.is_pro,
             "subscription_status": user.subscription_status,
             "created_at": user.created_at.isoformat()
         })
@@ -600,7 +600,7 @@ def test_cognito_upgrade():
     if not email:
         return jsonify({"error": "Email is required"}), 400
 
-    success = set_premium_cognito(email, True)
+    success = set_pro_subscription(email, True)
     if not success:
         return jsonify({"error": "Failed to update user in Cognito"}), 500
 
@@ -612,10 +612,10 @@ def test_cognito_upgrade():
             Limit=1
         )
         if not response['Users']:
-            return jsonify({"error": "User  not found after update"}), 404
+            return jsonify({"error": "User not found after update"}), 404
 
         user_attrs = {attr['Name']: attr['Value'] for attr in response['Users'][0]['Attributes']}
-        return jsonify({"message": "User  upgraded to premium", "attributes": user_attrs}), 200
+        return jsonify({"message": "User upgraded to pro", "attributes": user_attrs}), 200
     except Exception as e:
         return jsonify({"error": f"Failed to fetch user: {str(e)}"}), 500
 
@@ -636,7 +636,7 @@ def stripe_webhook():
             customer_email = session.get('customer_details', {}).get('email') or session.get('customer_email')
             if customer_email:
                 # Use the new function to update Cognito
-                if set_premium_cognito(customer_email, True):
+                if set_pro_subscription(customer_email, True):
                     print(f"[Stripe Webhook] Successfully upgraded {customer_email} in Cognito.")
                 else:
                     print(f"[Stripe Webhook] Failed to upgrade {customer_email} in Cognito.")

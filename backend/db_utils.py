@@ -30,11 +30,12 @@ def create_user(db: Session, email: str, cognito_id: str, first_name: str = None
     db.refresh(db_user)
     return db_user
 
-def update_user_premium_status(db: Session, user_id: int, is_premium: bool) -> User:
-    """Update user premium status"""
+def update_user_subscription_status(db: Session, user_id: int, is_pro: bool) -> User:
+    """Update user subscription status (basic/pro)"""
     db_user = db.query(User).filter(User.id == user_id).first()
     if db_user:
-        db_user.is_premium = is_premium
+        db_user.is_pro = is_pro
+        db_user.subscription_status = "pro" if is_pro else "basic"
         db.commit()
         db.refresh(db_user)
     return db_user
