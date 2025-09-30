@@ -16,6 +16,8 @@ export default function Document() {
             `,
           }}
         />
+        {/* HubSpot Chat Widget */}
+        <script type="text/javascript" id="hs-script-loader" async defer src="//js.hs-scripts.com/243665895.js"></script>
       </Head>
       <body>
         <Main />
