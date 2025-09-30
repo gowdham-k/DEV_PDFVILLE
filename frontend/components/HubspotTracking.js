@@ -25,6 +25,11 @@ const HubspotTracking = ({ pageName, pageData = {}, enableChat = true }) => {
         strategy="afterInteractive"
         dangerouslySetInnerHTML={{
           __html: `
+            window.hsConversationsSettings = {
+              loadImmediately: true,
+              enableWidgetCookieBanner: true
+            };
+            
             (function(d,s,i,r) {
               if (d.getElementById(i)){return;}
               var n=d.createElement(s),e=d.getElementsByTagName(s)[0];
@@ -34,20 +39,6 @@ const HubspotTracking = ({ pageName, pageData = {}, enableChat = true }) => {
           `
         }}
       />
-      {enableChat && (
-        <Script
-          id="hubspot-chat"
-          strategy="afterInteractive"
-          dangerouslySetInnerHTML={{
-            __html: `
-              window.hsConversationsSettings = {
-                loadImmediately: true,
-                enableWidgetCookieBanner: true
-              };
-            `
-          }}
-        />
-      )}
     </>
   );
 };
