@@ -105,4 +105,4 @@ def check_compress_pdf_restrictions(email, file_paths, compression_level="medium
         return {"error": "High compression quality is a premium feature. Please upgrade to access it.", "show_upgrade": True}
     
     return None
-
+    

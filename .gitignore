@@ -13,6 +13,5 @@ venv/
 *.log
 #sitemap.xml
 sitemap.xml
-frontend/pages/sitemap.xml
-frontend/sitemap.xml
+
 
