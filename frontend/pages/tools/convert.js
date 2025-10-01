@@ -482,7 +482,7 @@ export default function ConvertPage() {
 
       <div style={styles.maxWidth}>
         <button onClick={goBack} style={styles.backButton}>
-          \u2190 Back to Home
+          ← Back to Home
         </button>
 
         <div style={styles.header}>
@@ -499,7 +499,7 @@ export default function ConvertPage() {
         <div style={styles.card}>
           <div style={styles.section}>
             <div style={styles.instructions}>
-              <h3 style={styles.instructionTitle}>\u2139\uFE0F How to Convert PDFs:</h3>
+              <h3 style={styles.instructionTitle}>{String.fromCodePoint(0x2139, 0xFE0F)} How to Convert PDFs:</h3>
               <ul style={styles.instructionList}>
                 <li>Select a PDF file that you want to convert</li>
                 <li>Choose your desired output format from the options below</li>
