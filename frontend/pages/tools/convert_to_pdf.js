@@ -3,7 +3,6 @@ import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { API_BASE_URL } from "../../components/config";
 import { useRouter } from "next/navigation";
-import UpgradeModal from "../../components/UpgradeModal";
 
 export default function ConvertToPDFPage() {
   const searchParams = useSearchParams();
@@ -15,8 +14,6 @@ export default function ConvertToPDFPage() {
   const [dragActive, setDragActive] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [formatFromUrl, setFormatFromUrl] = useState(false);
-  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
-  const [upgradeMessage, setUpgradeMessage] = useState("");
 
   // Handle format parameter from URL only once on initial load
   useEffect(() => {
@@ -498,23 +495,6 @@ export default function ConvertToPDFPage() {
       });
 
       if (!response.ok) {
-        // Check if it's a restriction error (403)
-        if (response.status === 403) {
-          const errorData = await response.json();
-          if (errorData.show_upgrade) {
-            setUpgradeMessage(errorData.message || "Upgrade to Premium to convert PDFs with more pages");
-            setShowUpgradeModal(true);
-            setIsProcessing(false);
-            return;
-          }
-        }
-        // Check if it's a file size error (413)
-        if (response.status === 413) {
-          setUpgradeMessage("File size exceeds the limit. Upgrade to Premium for larger file conversions.");
-          setShowUpgradeModal(true);
-          setIsProcessing(false);
-          return;
-        }
         throw new Error(`Server error: ${response.status}`);
       }
 
@@ -710,15 +690,6 @@ export default function ConvertToPDFPage() {
       })}
     </div>
   </div>
-
-  {/* Upgrade Modal */}
-  {showUpgradeModal && (
-    <UpgradeModal
-      isOpen={showUpgradeModal}
-      onClose={() => setShowUpgradeModal(false)}
-      message={upgradeMessage}
-    />
-  )}
 
   {/* ✅ Keep Convert button at bottom */}
   <div style={styles.actionSection}>
