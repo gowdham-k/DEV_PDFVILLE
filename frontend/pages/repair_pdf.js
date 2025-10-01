@@ -82,7 +82,7 @@ export default function RepairPDFPage() {
       formData.append("preserve_bookmarks", preserveBookmarks.toString());
       formData.append("preserve_metadata", preserveMetadata.toString());
 
-      const response = await fetch(`${API_BASE_URL}/pdf-repair`, {
+      const response = await fetch(`${API_BASE_URL}/api/pdf-repair`, {
         method: "POST",
         body: formData,
         credentials: "include",

@@ -74,7 +74,7 @@ export default function SplitPage() {
         formData.append("custom_pages", splitOptions.customPages);
       }
 
-      const response = await fetch(`${API_BASE_URL}/split`, {
+      const response = await fetch(`${API_BASE_URL}/api/split`, {
         method: "POST",
         body: formData,
       });

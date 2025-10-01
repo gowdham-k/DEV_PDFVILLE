@@ -86,7 +86,7 @@ const sidebarTools = [
       
       if (token) {
         try {
-          const response = await fetch(`${API_BASE_URL}/profile`, {
+          const response = await fetch(`${API_BASE_URL}/api/profile`, {
             headers: {
               "Authorization": `Bearer ${token}`,
               "Content-Type": "application/json"
@@ -286,7 +286,7 @@ const MobileMenu = ({
     try {
       const token = localStorage.getItem("access_token");
       if (token) {
-        await fetch(`${API_BASE_URL}/logout`, {
+        await fetch(`${API_BASE_URL}/api/logout`, {
           method: "POST",
           headers: {
             "Authorization": `Bearer ${token}`,

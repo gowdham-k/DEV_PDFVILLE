@@ -94,7 +94,7 @@ export default function AddPageNumbersPage() {
       console.log("Sending page numbering request to:", `${API_BASE_URL}/pdf-add-page-numbers`);
       console.log("No authentication required for page numbering feature");
       
-      const response = await fetch(`${API_BASE_URL}/pdf-add-page-numbers`, {
+      const response = await fetch(`${API_BASE_URL}/api/pdf-add-page-numbers`, {
         method: "POST",
         body: formData,
         credentials: "include"

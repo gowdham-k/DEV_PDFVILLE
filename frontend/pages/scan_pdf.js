@@ -82,7 +82,7 @@ export default function ScanPDFPage() {
     formData.append('output_format', outputFormat);
 
     try {
-      const response = await fetch(`${API_BASE_URL}/pdf-scan`, {
+      const response = await fetch(`${API_BASE_URL}/api/pdf-scan`, {
         method: 'POST',
         body: formData,
       });

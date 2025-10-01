@@ -86,7 +86,7 @@ export default function RotatePagesPage() {
       formData.append("rotation_angle", rotationAngle);
       formData.append("rotation_type", rotationType);
 
-      const response = await fetch(`${API_BASE_URL}/pdf-rotate-pages`, {
+      const response = await fetch(`${API_BASE_URL}/api/pdf-rotate-pages`, {
         method: "POST",
         body: formData,
       });

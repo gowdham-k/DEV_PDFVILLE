@@ -99,7 +99,7 @@ export default function SecurePage() {
       formData.append("allow_modify", securityOptions.permissions.modify);
       formData.append("allow_annotate", securityOptions.permissions.annotate);
 
-      const response = await fetch(`${API_BASE_URL}/protect`, {
+      const response = await fetch(`${API_BASE_URL}/api/protect`, {
         method: "POST",
         body: formData,
       });

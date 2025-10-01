@@ -100,7 +100,7 @@ export default function WatermarkPage() {
       console.log("Sending watermark request to:", `${API_BASE_URL}/pdf-add-watermark`);
       console.log("No authentication required for watermark feature");
       
-      const response = await fetch(`${API_BASE_URL}/pdf-add-watermark`, {
+      const response = await fetch(`${API_BASE_URL}/api/pdf-add-watermark`, {
         method: "POST",
         body: formData,
         credentials: "include"

@@ -20,7 +20,7 @@ export default function ResetPassword() {
     setIsLoading(true);
 
     try {
-      const response = await fetch(`${API_BASE_URL}/forgot-password`, {
+      const response = await fetch(`${API_BASE_URL}/api/forgot-password`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -51,7 +51,7 @@ export default function ResetPassword() {
     setIsLoading(true);
 
     try {
-      const response = await fetch(`${API_BASE_URL}/verify-code`, {
+      const response = await fetch(`${API_BASE_URL}/api/verify-code`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -92,7 +92,7 @@ export default function ResetPassword() {
     setIsLoading(true);
 
     try {
-      const response = await fetch(`${API_BASE_URL}/reset-password`, {
+      const response = await fetch(`${API_BASE_URL}/api/reset-password`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

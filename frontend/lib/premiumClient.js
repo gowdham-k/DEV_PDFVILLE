@@ -9,7 +9,7 @@ export async function postWithEmail(endpoint, body) {
     } catch {}
   }
 
-  const res = await fetch(`${API_BASE_URL}${endpoint}`, {
+  const res = await fetch(`${API_BASE_URL}/api${endpoint}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ ...body, email }),

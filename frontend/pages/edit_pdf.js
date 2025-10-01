@@ -295,7 +295,7 @@ export default function EditPDFPage() {
       });
       formData.append('operations', JSON.stringify(operations));
       
-      const response = await fetch(`${API_BASE_URL}/edit-pdf`, {
+      const response = await fetch(`${API_BASE_URL}/api/edit-pdf`, {
         method: "POST",
         body: formData,
         credentials: "include"

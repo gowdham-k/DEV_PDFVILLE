@@ -65,7 +65,7 @@ export default function Signup() {
     setError('');
 
     try {
-      const response = await fetch(`${API_BASE_URL}/signup`, {
+      const response = await fetch(`${API_BASE_URL}/api/signup`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -106,7 +106,7 @@ export default function Signup() {
     setError('');
 
     try {
-      const response = await fetch(`${API_BASE_URL}/confirm-signup`, {
+      const response = await fetch(`${API_BASE_URL}/api/confirm-signup`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -140,7 +140,7 @@ export default function Signup() {
     setError('');
 
     try {
-      const response = await fetch(`${API_BASE_URL}/resend-confirmation`, {
+      const response = await fetch(`${API_BASE_URL}/api/resend-confirmation`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json"

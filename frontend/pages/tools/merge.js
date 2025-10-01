@@ -94,7 +94,7 @@ export default function MergePage() {
         formData.append("files", file);
       });
 
-      const response = await fetch(`${API_BASE_URL}/merge`, {
+      const response = await fetch(`${API_BASE_URL}/api/merge`, {
         method: "POST",
         body: formData,
       });

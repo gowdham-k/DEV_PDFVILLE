@@ -107,7 +107,7 @@ export default function SignPDFPage() {
       formData.append("position_y", positionY);
       formData.append("page_number", pageNumber);
       
-      const response = await fetch(`${API_BASE_URL}/pdf-sign`, {
+      const response = await fetch(`${API_BASE_URL}/api/pdf-sign`, {
         method: "POST",
         body: formData,
       });

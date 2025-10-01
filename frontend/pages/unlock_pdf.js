@@ -69,7 +69,7 @@ export default function UnlockPdfPage() {
         formData.append("password", password);
       }
 
-      const response = await fetch(`${API_BASE_URL}/pdf-unlock`, {
+      const response = await fetch(`${API_BASE_URL}/api/pdf-unlock`, {
         method: "POST",
         body: formData,
       });

@@ -83,7 +83,7 @@ export default function RemovePagesPage() {
       formData.append("pages_to_remove", pagesToRemove);
       formData.append("removal_type", removalType);
 
-      const response = await fetch(`${API_BASE_URL}/pdf-remove-pages`, {
+      const response = await fetch(`${API_BASE_URL}/api/pdf-remove-pages`, {
         method: "POST",
         body: formData,
       });
