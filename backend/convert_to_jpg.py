@@ -1,4 +1,4 @@
-from restrictions import check_restrictions
+from restrictions import check_convert_pdf_restrictions
 from flask import jsonify, send_file, request
 from pdf2image import convert_from_bytes
 import zipfile
@@ -27,13 +27,9 @@ def convert_pdf_to_jpg():
         uploaded_file.save(file_path)
 
         # Run restriction check
-        restriction = check_restrictions(email, [file_path])
+        restriction = check_convert_pdf_restrictions(email, [file_path])
         if restriction:
-            return jsonify({
-                "error": restriction,
-                "show_upgrade": True,
-                "message": restriction
-            }), 403
+            return jsonify(restriction), 403
 
         # Convert PDF to images
         with open(file_path, "rb") as f:

@@ -3,6 +3,7 @@ import pdfplumber
 from flask import jsonify, send_file, request
 from werkzeug.utils import secure_filename
 from utils import cleanup_file, create_temp_file
+from restrictions import check_convert_pdf_restrictions
 
 def handle_convert_pdf_to_html():
     """Handles PDF → HTML conversion with better error handling and cleanup"""
@@ -17,13 +18,25 @@ def handle_convert_pdf_to_html():
         if not uploaded_file or uploaded_file.filename == "":
             return jsonify({"error": "No file provided"}), 400
 
+        # Save uploaded file temporarily for restriction check
+        temp_input_path = create_temp_file(uploaded_file.filename)
+        uploaded_file.save(temp_input_path)
+        
+        # Check restrictions for PDF files
+        email = request.form.get("email", "anonymous@example.com")
+        restriction_error = check_convert_pdf_restrictions(email, [temp_input_path])
+        if restriction_error:
+            cleanup_file(temp_input_path)
+            return jsonify(restriction_error), 403
+
         # Sanitize filename
         original_name = secure_filename((uploaded_file.filename or "converted").rsplit(".", 1)[0])
 
         # Convert PDF to HTML
         html_content = ["<html><body>"]
-        with pdfplumber.open(uploaded_file) as pdf:
+        with pdfplumber.open(temp_input_path) as pdf:
             if not pdf.pages:
+                cleanup_file(temp_input_path)
                 return jsonify({"error": "PDF has no pages"}), 400
 
             for page in pdf.pages:
@@ -34,6 +47,9 @@ def handle_convert_pdf_to_html():
                     text = text.replace("\n", "<br>")
                     html_content.append(f"<p>{text}</p>")
         html_content.append("</body></html>")
+
+        # Clean up temp input file
+        cleanup_file(temp_input_path)
 
         # Save HTML to temp file
         output_path = create_temp_file(f"{original_name}.html")
