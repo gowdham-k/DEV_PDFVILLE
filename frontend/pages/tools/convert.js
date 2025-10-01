@@ -15,6 +15,7 @@ export default function ConvertPage() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [formatFromUrl, setFormatFromUrl] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [upgradeMessage, setUpgradeMessage] = useState("");
 
   // Handle format parameter from URL only once on initial load
   useEffect(() => {
@@ -326,6 +327,10 @@ export default function ConvertPage() {
     setFile(null);
   };
 
+  const closeUpgradeModal = () => {
+    setShowUpgradeModal(false);
+  };
+
   const handleSubmit = async () => {
     if (!file) {
       alert("Please select a PDF file to convert");
@@ -357,9 +362,17 @@ export default function ConvertPage() {
         // Handle restriction error - show upgrade modal
         const errorData = await response.json();
         if (errorData.show_upgrade) {
+          setUpgradeMessage(errorData.message || "You've reached the limit for free PDF conversions. Upgrade to Premium for unlimited conversions.");
           setShowUpgradeModal(true);
           return;
         }
+      }
+
+      // Check if it's a file size error (413)
+      if (response.status === 413) {
+        setUpgradeMessage("File size exceeds the limit. Upgrade to Premium for larger file conversions.");
+        setShowUpgradeModal(true);
+        return;
       }
 
       if (!response.ok) {
@@ -637,64 +650,24 @@ export default function ConvertPage() {
         </div>
       </div>
 
-      {/* Upgrade Modal */}
+      {/* Upgrade Modal - Implemented directly for better control */}
       {showUpgradeModal && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(0, 0, 0, 0.5)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 1000
-        }}>
-          <div style={{
-            backgroundColor: 'white',
-            padding: '32px',
-            borderRadius: '16px',
-            maxWidth: '500px',
-            width: '90%',
-            textAlign: 'center',
-            boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)'
-          }}>
-            <div style={{ fontSize: '48px', marginBottom: '16px' }}>🚀</div>
-            <h2 style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '16px', color: '#333' }}>
-              Upgrade to Premium
-            </h2>
-            <p style={{ color: '#666', marginBottom: '24px', lineHeight: '1.5' }}>
-              You've reached the limit for free PDF conversions. Upgrade to Premium for unlimited conversions, 
-              larger file sizes, and priority processing.
-            </p>
-            <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center" style={{position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+          <div className="bg-white p-6 rounded-xl shadow-xl text-center max-w-sm" style={{backgroundColor: 'white', padding: '24px', borderRadius: '12px', maxWidth: '400px', position: 'relative', zIndex: 10000, margin: 'auto'}}>
+            <h2 className="text-xl font-bold mb-3" style={{fontSize: '20px', fontWeight: 'bold', marginBottom: '12px'}}>Upgrade Required</h2>
+            <p className="mb-4" style={{marginBottom: '16px'}}>{upgradeMessage}</p>
+            <div className="flex justify-center gap-4" style={{display: 'flex', justifyContent: 'center', gap: '16px'}}>
               <button
-                onClick={() => window.open('https://pdfville.com/pricing', '_blank')}
-                style={{
-                  backgroundColor: '#007bff',
-                  color: 'white',
-                  padding: '12px 24px',
-                  borderRadius: '8px',
-                  border: 'none',
-                  fontWeight: 'bold',
-                  cursor: 'pointer',
-                  fontSize: '16px'
-                }}
+                onClick={() => window.location.href = "/pricing"}
+                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+                style={{backgroundColor: '#3B82F6', color: 'white', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer'}}
               >
                 Upgrade Now
               </button>
               <button
-                onClick={() => setShowUpgradeModal(false)}
-                style={{
-                  backgroundColor: '#f8f9fa',
-                  color: '#666',
-                  padding: '12px 24px',
-                  borderRadius: '8px',
-                  border: '1px solid #dee2e6',
-                  cursor: 'pointer',
-                  fontSize: '16px'
-                }}
+                onClick={closeUpgradeModal}
+                className="bg-gray-300 px-4 py-2 rounded-lg hover:bg-gray-400"
+                style={{backgroundColor: '#D1D5DB', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer'}}
               >
                 Cancel
               </button>
