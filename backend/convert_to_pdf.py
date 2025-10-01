@@ -5,6 +5,7 @@ from PIL import Image
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import letter
 import fitz  # PyMuPDF
+from restrictions import check_convert_pdf_restrictions
 
 def convert_to_pdf():
     """
@@ -22,7 +23,17 @@ def convert_to_pdf():
         
         # Create a temporary directory to work with
         temp_dir = tempfile.mkdtemp()
+        temp_input_path = os.path.join(temp_dir, "input" + file_ext)
         output_path = os.path.join(temp_dir, "output.pdf")
+        
+        # Save the uploaded file to a temporary location
+        uploaded_file.save(temp_input_path)
+        
+        # Check restrictions for PDF files
+        email = request.form.get("email", "anonymous@example.com")
+        restriction_error = check_convert_pdf_restrictions(email, [temp_input_path])
+        if restriction_error:
+            return jsonify(restriction_error), 403
         
         # Process based on file type
         if file_ext in [".jpg", ".jpeg", ".png", ".bmp", ".tiff"]:
