@@ -358,25 +358,37 @@ export default function ConvertPage() {
         body: formData,
       });
 
-      if (response.status === 403) {
-        // Handle restriction error - show upgrade modal
-        const errorData = await response.json();
-        if (errorData.show_upgrade) {
-          setUpgradeMessage(errorData.message || "You've reached the limit for free PDF conversions. Upgrade to Premium for unlimited conversions.");
-          setShowUpgradeModal(true);
-          return;
-        }
-      }
-
-      // Check if it's a file size error (413)
-      if (response.status === 413) {
-        setUpgradeMessage("File size exceeds the limit. Upgrade to Premium for larger file conversions.");
-        setShowUpgradeModal(true);
-        return;
-      }
-
+      // Handle error responses
       if (!response.ok) {
-        throw new Error(`Server error: ${response.status}`);
+        const contentType = response.headers.get("content-type");
+        if (contentType && contentType.includes("application/json")) {
+          const errorData = await response.json();
+          
+          if (response.status === 403) {
+            // Handle restriction error - show upgrade modal
+            if (errorData.show_upgrade) {
+              setUpgradeMessage(errorData.message || "You've reached the limit for free PDF conversions. Upgrade to Premium for unlimited conversions.");
+              setShowUpgradeModal(true);
+              return;
+            }
+          } else if (response.status === 413) {
+            // Handle file size error - show upgrade modal
+            setUpgradeMessage("File size exceeds the limit. Upgrade to Premium for larger file conversions.");
+            setShowUpgradeModal(true);
+            return;
+          }
+          
+          // Otherwise throw a generic error
+          throw new Error(errorData.error || `Server error: ${response.status}`);
+        } else {
+          // Handle file size error (413) even without JSON response
+          if (response.status === 413) {
+            setUpgradeMessage("File size exceeds the limit. Upgrade to Premium for larger file conversions.");
+            setShowUpgradeModal(true);
+            return;
+          }
+          throw new Error(`Server error: ${response.status}`);
+        }
       }
 
       const blob = await response.blob();
@@ -399,9 +411,15 @@ export default function ConvertPage() {
       window.URL.revokeObjectURL(url);
     } catch (error) {
       console.error('Error:', error);
-      alert("Error: " + error.message);
+      
+      // Show upgrade modal for free users instead of generic error
+      setUpgradeMessage("Upgrade to premium to convert PDF files of any size with unlimited conversions.");
+      setShowUpgradeModal(true);
+      // Don't show any error alert, just the modal
     } finally {
-      setIsProcessing(false);
+      if (!showUpgradeModal) {
+        setIsProcessing(false);
+      }
     }
   };
 
