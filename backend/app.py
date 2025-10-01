@@ -83,6 +83,9 @@ load_dotenv('.env', override=True)
 # Initialize Flask app
 app = Flask(__name__)
 
+# Configure maximum file upload size (50MB)
+app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024  # 50MB in bytes
+
 # Configure CORS based on environment
 cors_origins = os.environ.get('CORS_ORIGINS', '*')
 if cors_origins == '*':
