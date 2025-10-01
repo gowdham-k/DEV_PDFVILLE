@@ -87,7 +87,7 @@ def check_compress_pdf_restrictions(email, file_paths, compression_level="medium
         
     # Free user restrictions for compress_pdf
     FREE_MAX_FILES = 1  # Free users can only compress one file at a time
-    FREE_MAX_FILE_SIZE_MB = 0.3  # Free users limited to 300KB files
+    FREE_MAX_FILE_SIZE_MB = 5  # Free users limited to 5MB files (increased from 300KB)
     FREE_COMPRESSION_LEVELS = ["low", "medium"]  # Free users can't use high compression
     
     # Check number of files
@@ -98,7 +98,7 @@ def check_compress_pdf_restrictions(email, file_paths, compression_level="medium
     for path in file_paths:
         size_mb = (os.path.getsize(path) / (1024 * 1024))
         if size_mb > FREE_MAX_FILE_SIZE_MB:
-            return {"error": f"File {os.path.basename(path)} exceeds 300KB free limit. Premium users can compress files up to 500MB.", "show_upgrade": True}
+            return {"error": f"File {os.path.basename(path)} exceeds 5MB free limit. Premium users can compress files up to 500MB.", "show_upgrade": True}
     
     # Check compression level
     if compression_level not in FREE_COMPRESSION_LEVELS:

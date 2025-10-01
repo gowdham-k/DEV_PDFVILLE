@@ -6,6 +6,7 @@
     <changefreq>monthly</changefreq>
     <priority>1.0</priority>
   </url>
+  <!-- Tool Pages -->
   <url>
     <loc>https://pdfville.com/tools/compress</loc>
     <lastmod>2024-06-15</lastmod>
@@ -43,6 +44,13 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://pdfville.com/tools</loc>
+    <lastmod>2024-06-15</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <!-- PDF Editing Tools -->
+  <url>
     <loc>https://pdfville.com/edit_pdf</loc>
     <lastmod>2024-06-15</lastmod>
     <changefreq>monthly</changefreq>
@@ -62,6 +70,12 @@
   </url>
   <url>
     <loc>https://pdfville.com/pdf_to_pdfa</loc>
+    <lastmod>2024-06-15</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://pdfville.com/pdf_translate</loc>
     <lastmod>2024-06-15</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
@@ -91,7 +105,56 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://pdfville.com/sign_pdf</loc>
+    <lastmod>2024-06-15</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://pdfville.com/unlock_pdf</loc>
+    <lastmod>2024-06-15</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <!-- Information Pages -->
+  <url>
+    <loc>https://pdfville.com/about</loc>
+    <lastmod>2024-06-15</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://pdfville.com/business</loc>
+    <lastmod>2024-06-15</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://pdfville.com/contact</loc>
+    <lastmod>2024-06-15</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://pdfville.com/cookies</loc>
+    <lastmod>2024-06-15</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://pdfville.com/education</loc>
+    <lastmod>2024-06-15</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://pdfville.com/faq</loc>
+    <lastmod>2024-06-15</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://pdfville.com/features</loc>
     <lastmod>2024-06-15</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
@@ -100,22 +163,16 @@
     <loc>https://pdfville.com/pricing</loc>
     <lastmod>2024-06-15</lastmod>
     <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
+    <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://pdfville.com/login</loc>
+    <loc>https://pdfville.com/privacy_policy</loc>
     <lastmod>2024-06-15</lastmod>
     <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
+    <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://pdfville.com/signup</loc>
-    <lastmod>2024-06-15</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://pdfville.com/upgrade</loc>
+    <loc>https://pdfville.com/security</loc>
     <lastmod>2024-06-15</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
@@ -126,10 +183,35 @@
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
+  <!-- User Account Pages -->
   <url>
-    <loc>https://pdfville.com/terms-new</loc>
+    <loc>https://pdfville.com/login</loc>
+    <lastmod>2024-06-15</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://pdfville.com/signup</loc>
+    <lastmod>2024-06-15</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://pdfville.com/reset-password</loc>
     <lastmod>2024-06-15</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://pdfville.com/success</loc>
+    <lastmod>2024-06-15</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://pdfville.com/upgrade</loc>
+    <lastmod>2024-06-15</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
   </url>
 </urlset>
