@@ -489,7 +489,7 @@ export default function ConvertToPDFPage() {
       
       formData.append("input_format", inputFormat);
 
-      const response = await fetch(`${API_BASE_URL}/convert-${inputFormat}-to-pdf`, {
+      const response = await fetch(`${API_BASE_URL}/api/convert-${inputFormat}-to-pdf`, {
         method: "POST",
         body: formData,
       });
