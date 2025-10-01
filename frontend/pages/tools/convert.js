@@ -415,7 +415,7 @@ export default function ConvertPage() {
       value: 'jpg',
       label: 'Convert to JPG',
       description: 'High-quality images, perfect for sharing and viewing',
-      icon: '???',
+      icon: '\uD83D\uDDBC\uFE0F',
       color: '#f5f5f5',
       borderColor: '#666666',
       output: 'ZIP file with JPG images'
@@ -424,7 +424,7 @@ export default function ConvertPage() {
       value: 'png',
       label: 'Convert to PNG',
       description: 'Lossless images with transparency support',
-      icon: '??',
+      icon: '\uD83C\uDFA8',
       color: '#f0f0f0',
       borderColor: '#555555',
       output: 'ZIP file with PNG images'
@@ -433,7 +433,7 @@ export default function ConvertPage() {
       value: 'pptx',
       label: 'Convert to PowerPoint',
       description: 'Editable presentation slides from your PDF',
-      icon: '??',
+      icon: '\uD83D\uDCCA',
       color: '#e8e8e8',
       borderColor: '#444444',
       output: 'PowerPoint file (.pptx)'
@@ -442,7 +442,7 @@ export default function ConvertPage() {
       value: 'excel',
       label: 'Convert to Excel',
       description: 'Extract tables and data into spreadsheet format',
-      icon: '??',
+      icon: '\uD83D\uDCC8',
       color: '#e0e0e0',
       borderColor: '#333333',
       output: 'Excel file (.xlsx)'
@@ -451,7 +451,7 @@ export default function ConvertPage() {
       value: 'html',
       label: 'Convert to HTML',
       description: 'Web-ready HTML files with text and images',
-      icon: '??',
+      icon: '\uD83C\uDF10',
       color: '#d8d8d8',
       borderColor: '#000000',
       output: 'ZIP file with HTML files'
@@ -460,7 +460,7 @@ export default function ConvertPage() {
       value: 'word',
       label: 'Convert to Word',
       description: 'Editable Word document (.docx) for easy text editing',
-      icon: '??',
+      icon: '\uD83D\uDCC4',
       color: '#d0d0d0',
       borderColor: '#222222',
       output: 'Word Document (.docx)'
@@ -482,12 +482,12 @@ export default function ConvertPage() {
 
       <div style={styles.maxWidth}>
         <button onClick={goBack} style={styles.backButton}>
-          ? Back to Home
+          \u2190 Back to Home
         </button>
 
         <div style={styles.header}>
           <div style={styles.headerIcon}>
-            <span>??</span>
+            <span>\uD83D\uDD04</span>
           </div>
           <h1 style={styles.title}>Convert PDF</h1>
           <p style={styles.subtitle}>
@@ -499,7 +499,7 @@ export default function ConvertPage() {
         <div style={styles.card}>
           <div style={styles.section}>
             <div style={styles.instructions}>
-              <h3 style={styles.instructionTitle}>?? How to Convert PDFs:</h3>
+              <h3 style={styles.instructionTitle}>\u2139\uFE0F How to Convert PDFs:</h3>
               <ul style={styles.instructionList}>
                 <li>Select a PDF file that you want to convert</li>
                 <li>Choose your desired output format from the options below</li>
@@ -512,7 +512,7 @@ export default function ConvertPage() {
             </div>
 
             <h2 style={styles.sectionTitle}>
-              <span style={{ fontSize: '28px', marginRight: '12px' }}>??</span>
+              <span style={{ fontSize: '28px', marginRight: '12px' }}>\uD83D\uDCC1</span>
               Select PDF File
             </h2>
             
@@ -531,7 +531,7 @@ export default function ConvertPage() {
               />
               
               <div style={styles.uploadIcon}>
-                {file ? '??' : '??'}
+                {file ? '\uD83D\uDCC4' : '\uD83D\uDCE4'}
               </div>
               
               <p style={styles.uploadText}>
@@ -544,7 +544,7 @@ export default function ConvertPage() {
 
             {file && (
               <div style={styles.fileDisplay}>
-                <span style={styles.fileIcon}>??</span>
+                <span style={styles.fileIcon}>\uD83D\uDCC4</span>
                 <div style={styles.fileInfo}>
                   <div style={styles.fileName}>{file.name}</div>
                   <div style={styles.fileSize}>
@@ -560,7 +560,7 @@ export default function ConvertPage() {
 
           <div style={styles.formatSection}>
             <h2 style={styles.formatTitle}>
-              <span style={{ fontSize: '28px', marginRight: '12px' }}>??</span>
+              <span style={{ fontSize: '28px', marginRight: '12px' }}>\uD83C\uDFAF</span>
               Choose Output Format
               {outputFormat && (
                 <span style={{ 
@@ -631,7 +631,7 @@ export default function ConvertPage() {
                 </>
               ) : (
                 <>
-                  <span style={{ fontSize: '24px', marginRight: '12px' }}>??</span>
+                  <span style={{ fontSize: '24px', marginRight: '12px' }}>\uD83D\uDD04</span>
                   Convert to {selectedFormat?.label.split(' ')[2] || outputFormat.toUpperCase()}
                 </>
               )}
