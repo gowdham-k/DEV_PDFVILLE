@@ -106,6 +106,9 @@ def compress_pdf():
             # First pass with PyMuPDF for image optimization
             pymupdf_optimize(input_path, temp_path, quality=90, resolution=170)
             
+            # Copy the temp file to output path since we're missing this step
+            shutil.copy2(temp_path, output_path)
+            
         # -------------------------------
         # MODE: HIGH (premium only - maximum compression)
         # -------------------------------
