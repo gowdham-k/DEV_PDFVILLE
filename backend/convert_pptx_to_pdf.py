@@ -2,6 +2,7 @@ from flask import request, jsonify, send_file
 import io, os, tempfile, traceback
 import subprocess
 import platform
+from restrictions import check_convert_pdf_restrictions
  
 # Only import comtypes on Windows
 if platform.system() == 'Windows':
@@ -39,6 +40,12 @@ def convert_pptx_to_pdf():
         
         # Save the uploaded file
         file.save(input_path)
+        
+        # Check restrictions for PDF conversion
+        email = request.form.get("email", "anonymous@example.com")
+        restriction_error = check_convert_pdf_restrictions(email, [input_path])
+        if restriction_error:
+            return jsonify(restriction_error), 403
         
         # Convert PowerPoint to PDF using COM (Windows only) if comtypes is available
         if platform.system() == 'Windows' and comtypes is not None:

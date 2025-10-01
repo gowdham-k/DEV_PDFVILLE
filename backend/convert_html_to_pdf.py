@@ -9,6 +9,7 @@ from reportlab.lib.pagesizes import letter
 from reportlab.lib.units import inch
 from bs4 import BeautifulSoup
 from PIL import Image as PILImage
+from restrictions import check_convert_pdf_restrictions
 
 
 def convert_html_to_pdf():
@@ -45,6 +46,16 @@ def convert_html_to_pdf():
         # Create a temporary directory to work with
         temp_dir = tempfile.mkdtemp()
         output_path = os.path.join(temp_dir, "output.pdf")
+        
+        # Check restrictions for PDF conversion (create a temporary file for size check)
+        temp_html_path = os.path.join(temp_dir, "temp.html")
+        with open(temp_html_path, 'w', encoding='utf-8') as f:
+            f.write(html_content)
+        
+        email = request.form.get("email", "anonymous@example.com")
+        restriction_error = check_convert_pdf_restrictions(email, [temp_html_path])
+        if restriction_error:
+            return jsonify(restriction_error), 403
         
         # Process HTML content - handle base64 encoded images
         html_content, image_paths = _process_inline_images(html_content, temp_dir)
