@@ -4,7 +4,6 @@ from PIL import Image
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import letter
 import zipfile
-from restrictions import check_convert_pdf_restrictions
 
 def convert_jpg_to_pdf():
     """
@@ -40,24 +39,11 @@ def convert_jpg_to_pdf():
         # Create a temporary directory to work with
         temp_dir = tempfile.mkdtemp()
         
-        # Save files temporarily for restriction check
-        temp_file_paths = []
-        for i, file in enumerate(files):
-            temp_path = os.path.join(temp_dir, f"input_{i}.jpg")
-            file.save(temp_path)
-            temp_file_paths.append(temp_path)
-        
-        # Check restrictions
-        email = request.form.get("email", "anonymous@example.com")
-        restriction_error = check_convert_pdf_restrictions(email, temp_file_paths)
-        if restriction_error:
-            return jsonify(restriction_error), 403
-        
         # Process single file or multiple files differently
         if len(files) == 1:
-            # Single file conversion - use the already saved temp file
+            # Single file conversion
             output_path = os.path.join(temp_dir, "output.pdf")
-            image = Image.open(temp_file_paths[0])
+            image = Image.open(files[0])
             
             # Convert to RGB if necessary (for RGBA images)
             if image.mode == 'RGBA':
@@ -72,12 +58,12 @@ def convert_jpg_to_pdf():
             zip_path = os.path.join(temp_dir, "converted_pdfs.zip")
             
             with zipfile.ZipFile(zip_path, 'w') as zipf:
-                for i, temp_path in enumerate(temp_file_paths):
+                for i, file in enumerate(files):
                     # Create PDF for each image
                     pdf_filename = f"image_{i+1}.pdf"
                     pdf_path = os.path.join(temp_dir, pdf_filename)
                     
-                    image = Image.open(temp_path)
+                    image = Image.open(file)
                     if image.mode == 'RGBA':
                         image = image.convert('RGB')
                     
