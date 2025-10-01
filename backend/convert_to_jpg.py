@@ -29,7 +29,11 @@ def convert_pdf_to_jpg():
         # Run restriction check
         restriction = check_restrictions(email, [file_path])
         if restriction:
-            return jsonify({"error": restriction}), 403
+            return jsonify({
+                "error": restriction,
+                "show_upgrade": True,
+                "message": restriction
+            }), 403
 
         # Convert PDF to images
         with open(file_path, "rb") as f:

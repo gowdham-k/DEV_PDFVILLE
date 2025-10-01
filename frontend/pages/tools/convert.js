@@ -14,6 +14,7 @@ export default function ConvertPage() {
   const [dragActive, setDragActive] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [formatFromUrl, setFormatFromUrl] = useState(false);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
   // Handle format parameter from URL only once on initial load
   useEffect(() => {
@@ -342,11 +343,24 @@ export default function ConvertPage() {
       const formData = new FormData();
       formData.append("file", file);
       formData.append("output_format", outputFormat);
+      
+      // Get user email from localStorage
+      const userEmail = localStorage.getItem('userEmail') || 'guest@example.com';
+      formData.append("user_email", userEmail);
 
       const response = await fetch(`${API_BASE_URL}/convert-${outputFormat}`, {
         method: "POST",
         body: formData,
       });
+
+      if (response.status === 403) {
+        // Handle restriction error - show upgrade modal
+        const errorData = await response.json();
+        if (errorData.show_upgrade) {
+          setShowUpgradeModal(true);
+          return;
+        }
+      }
 
       if (!response.ok) {
         throw new Error(`Server error: ${response.status}`);
@@ -622,6 +636,72 @@ export default function ConvertPage() {
           </div>
         </div>
       </div>
+
+      {/* Upgrade Modal */}
+      {showUpgradeModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000
+        }}>
+          <div style={{
+            backgroundColor: 'white',
+            padding: '32px',
+            borderRadius: '16px',
+            maxWidth: '500px',
+            width: '90%',
+            textAlign: 'center',
+            boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)'
+          }}>
+            <div style={{ fontSize: '48px', marginBottom: '16px' }}>🚀</div>
+            <h2 style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '16px', color: '#333' }}>
+              Upgrade to Premium
+            </h2>
+            <p style={{ color: '#666', marginBottom: '24px', lineHeight: '1.5' }}>
+              You've reached the limit for free PDF conversions. Upgrade to Premium for unlimited conversions, 
+              larger file sizes, and priority processing.
+            </p>
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+              <button
+                onClick={() => window.open('https://pdfville.com/pricing', '_blank')}
+                style={{
+                  backgroundColor: '#007bff',
+                  color: 'white',
+                  padding: '12px 24px',
+                  borderRadius: '8px',
+                  border: 'none',
+                  fontWeight: 'bold',
+                  cursor: 'pointer',
+                  fontSize: '16px'
+                }}
+              >
+                Upgrade Now
+              </button>
+              <button
+                onClick={() => setShowUpgradeModal(false)}
+                style={{
+                  backgroundColor: '#f8f9fa',
+                  color: '#666',
+                  padding: '12px 24px',
+                  borderRadius: '8px',
+                  border: '1px solid #dee2e6',
+                  cursor: 'pointer',
+                  fontSize: '16px'
+                }}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
