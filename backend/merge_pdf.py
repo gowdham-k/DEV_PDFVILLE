@@ -1,4 +1,4 @@
-from restrictions import check_restrictions
+from restrictions import check_merge_pdf_restrictions
 from flask import jsonify, send_file, request
 from PyPDF2 import PdfMerger
 import traceback
@@ -28,9 +28,13 @@ def merge_pdfs():
             file_paths.append(path)
 
         # Run restriction checks
-        restriction = check_restrictions(email, file_paths)
+        restriction = check_merge_pdf_restrictions(email, file_paths)
         if restriction:
-            return jsonify({"error": restriction}), 403
+            # Handle both string and dict error responses
+            if isinstance(restriction, dict):
+                return jsonify(restriction), 403
+            else:
+                return jsonify({"error": restriction}), 403
 
         # Merge PDFs
         merger = PdfMerger()

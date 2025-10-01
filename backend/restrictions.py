@@ -84,7 +84,6 @@ def check_compress_pdf_restrictions(email, file_paths, compression_level="medium
     # Premium users have no restrictions
     if user["is_premium_"]:
         return None
-        
     # Free user restrictions for compress_pdf
     FREE_MAX_FILES = 1  # Free users can only compress one file at a time
     FREE_MAX_FILE_SIZE_MB = 5  # Free users limited to 5MB files (increased from 300KB)
@@ -106,6 +105,50 @@ def check_compress_pdf_restrictions(email, file_paths, compression_level="medium
     
     return None
 
+
+def check_merge_pdf_restrictions(email, file_paths):
+    """
+    Check restrictions specific to the merge PDF feature.
+    
+    Args:
+        email: User's email
+        file_paths: List of file paths to check
+        
+    Returns:
+        Error message if restrictions are violated, None otherwise
+    """
+    user = get_user(email)
+    
+    # Premium users have no restrictions
+    if user["is_premium_"]:
+        return None
+        
+    # Free user restrictions for merge PDF
+    FREE_MAX_FILES = 2  # Free users can only merge up to 2 files
+    FREE_MAX_FILE_SIZE_MB = 5  # Free users limited to 5MB files
+    FREE_MAX_PAGES = 10  # Free users can only merge PDFs with up to 10 pages each
+    
+    # Check number of files
+    if len(file_paths) > FREE_MAX_FILES:
+        return {"error": "Free users can only merge up to 2 PDF files at a time. Upgrade to premium to merge more files.", "show_upgrade": True}
+    
+    # Check file size and page count
+    for path in file_paths:
+        size_mb = (os.path.getsize(path) / (1024 * 1024))
+        if size_mb > FREE_MAX_FILE_SIZE_MB:
+            return {"error": f"File {os.path.basename(path)} exceeds 5MB free limit. Premium users can merge larger files.", "show_upgrade": True}
+        
+        # Check page count for PDF files
+        try:
+            reader = PdfReader(path)
+            if len(reader.pages) > FREE_MAX_PAGES:
+                return {"error": f"File {os.path.basename(path)} exceeds the 10-page free limit. Upgrade to premium to merge larger PDFs.", "show_upgrade": True}
+        except Exception as e:
+            print(f"Error reading PDF pages for restriction check: {e}")
+            return {"error": f"Could not process file {os.path.basename(path)} for restriction check.", "show_upgrade": False}
+    
+    return None
+        
 def check_convert_pdf_restrictions(email, file_paths):
     """
     Check restrictions specific to PDF conversion features.
