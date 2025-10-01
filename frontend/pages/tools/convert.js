@@ -361,6 +361,8 @@ export default function ConvertPage() {
       // Handle error responses
       if (!response.ok) {
         const contentType = response.headers.get("content-type");
+        let shouldShowModal = false;
+        
         if (contentType && contentType.includes("application/json")) {
           const errorData = await response.json();
           
@@ -369,25 +371,36 @@ export default function ConvertPage() {
             if (errorData.show_upgrade) {
               setUpgradeMessage(errorData.message || "You've reached the limit for free PDF conversions. Upgrade to Premium for unlimited conversions.");
               setShowUpgradeModal(true);
-              return;
+              shouldShowModal = true;
             }
           } else if (response.status === 413) {
             // Handle file size error - show upgrade modal
             setUpgradeMessage("File size exceeds the limit. Upgrade to Premium for larger file conversions.");
             setShowUpgradeModal(true);
-            return;
+            shouldShowModal = true;
           }
           
-          // Otherwise throw a generic error
-          throw new Error(errorData.error || `Server error: ${response.status}`);
+          // Only throw error if we're not showing the modal
+          if (!shouldShowModal) {
+            throw new Error(errorData.error || `Server error: ${response.status}`);
+          }
         } else {
           // Handle file size error (413) even without JSON response
           if (response.status === 413) {
             setUpgradeMessage("File size exceeds the limit. Upgrade to Premium for larger file conversions.");
             setShowUpgradeModal(true);
-            return;
+            shouldShowModal = true;
           }
-          throw new Error(`Server error: ${response.status}`);
+          
+          // Only throw error if we're not showing the modal
+          if (!shouldShowModal) {
+            throw new Error(`Server error: ${response.status}`);
+          }
+        }
+        
+        // If we're showing the modal, return early to avoid further processing
+        if (shouldShowModal) {
+          return;
         }
       }
 
@@ -412,14 +425,19 @@ export default function ConvertPage() {
     } catch (error) {
       console.error('Error:', error);
       
-      // Show upgrade modal for free users instead of generic error
-      setUpgradeMessage("Upgrade to premium to convert PDF files of any size with unlimited conversions.");
-      setShowUpgradeModal(true);
+      // Check if this is a 413 error that should show upgrade modal
+      if (error.message && error.message.includes('413')) {
+        setUpgradeMessage("File size exceeds the limit. Upgrade to Premium for larger file conversions.");
+        setShowUpgradeModal(true);
+      } else {
+        // Show upgrade modal for free users instead of generic error
+        setUpgradeMessage("Upgrade to premium to convert PDF files of any size with unlimited conversions.");
+        setShowUpgradeModal(true);
+      }
       // Don't show any error alert, just the modal
     } finally {
-      if (!showUpgradeModal) {
-        setIsProcessing(false);
-      }
+      // Always reset processing state - the modal will handle its own state
+      setIsProcessing(false);
     }
   };
 
