@@ -330,6 +330,12 @@ const MobileMenu = ({
     });
   };
 
+  // Function to handle opening legal pages in new tabs
+  const handleLegalPageNavigation = (path) => {
+    const baseUrl = window.location.origin;
+    window.open(`${baseUrl}${path}`, '_blank', 'noopener,noreferrer');
+  };
+
   const handleAuthButton = () => {
     console.log("Auth button clicked, isAuthenticated:", isAuthenticated);
     if (isAuthenticated) {
@@ -757,16 +763,16 @@ const MobileMenu = ({
                 <h3 style={{ fontSize: "1rem", fontWeight: "600", marginBottom: "1rem" }}>LEGAL</h3>
                 <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
                   <li style={{ marginBottom: "0.5rem" }}>
-                    <div onClick={() => handleFooterNavigation("/security")} style={{ cursor: "pointer", fontSize: "0.9rem" }}>Security</div>
+                    <div onClick={() => handleLegalPageNavigation("/security")} style={{ cursor: "pointer", fontSize: "0.9rem" }}>Security</div>
                   </li>
                   <li style={{ marginBottom: "0.5rem" }}>
-                    <div onClick={() => handleFooterNavigation("/privacy_policy")} style={{ cursor: "pointer", fontSize: "0.9rem" }}>Privacy policy</div>
+                    <div onClick={() => handleLegalPageNavigation("/privacy_policy")} style={{ cursor: "pointer", fontSize: "0.9rem" }}>Privacy policy</div>
                   </li>
                   <li style={{ marginBottom: "0.5rem" }}>
-                    <div onClick={() => handleFooterNavigation("/terms")} style={{ cursor: "pointer", fontSize: "0.9rem" }}>Terms & conditions</div>
+                    <div onClick={() => handleLegalPageNavigation("/terms")} style={{ cursor: "pointer", fontSize: "0.9rem" }}>Terms & conditions</div>
                   </li>
                   <li style={{ marginBottom: "0.5rem" }}>
-                    <div onClick={() => handleFooterNavigation("/cookies")} style={{ cursor: "pointer", fontSize: "0.9rem" }}>Cookies</div>
+                    <div onClick={() => handleLegalPageNavigation("/cookies")} style={{ cursor: "pointer", fontSize: "0.9rem" }}>Cookies</div>
                   </li>
                 </ul>
               </div>
