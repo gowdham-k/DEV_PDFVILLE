@@ -22,6 +22,7 @@ def convert_pdf_to_jpg():
         email = request.form.get("email") or request.form.get("user_email") or "free@example.com"
         print(f"[DEBUG] /convert-jpg email={email}")
         user_info = get_user(email)
+        print(f"[DEBUG] /convert-jpg user_info={user_info}")
         print(f"[DEBUG] /convert-jpg premium={user_info.get('is_premium_')} for {email}")
 
         # Save file temporarily for restriction check

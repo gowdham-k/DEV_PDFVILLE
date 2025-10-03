@@ -503,6 +503,12 @@ def get_profile():
     except Exception as e:
         return jsonify({"error": f"Failed to fetch profile: {str(e)}"}), 500
 
+@app.route('/debug/check-user/<email>', methods=['GET'])
+def debug_check_user(email):
+    from restrictions import get_user
+    user_info = get_user(email)
+    return jsonify(user_info)
+    
 @app.route(prefix_route("/refresh-token"), methods=["POST"])
 def refresh_token():
     """Refresh access token using refresh token"""
