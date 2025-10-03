@@ -11,34 +11,6 @@ from flask import current_app # Import current_app to access app config
 
 # Remove or comment out the 'users' dictionary if you fully transition to Cognito.
 # For now, let's keep it for backward compatibility with get_user if needed elsewhere.
-"""
-def get_user(email):
-    """
-    #Fetches user details, including premium status, directly from Cognito.
-    #This function will replace the in-memory 'users' dictionary lookup.
-    """
-    cognito_client = boto3.client("cognito-idp", region_name=current_app.config['REGION'])
-    user_pool_id = current_app.config['USER_POOL_ID']
-
-    try:
-        response = cognito_client.list_users(
-            UserPoolId=user_pool_id,
-            Filter=f'email = "{email}"',
-            Limit=1
-        )
-        if response['Users']:
-            user_attributes = {attr['Name']: attr['Value'] for attr in response['Users'][0]['Attributes']}
-            is_premium_ = user_attributes.get('custom:is_premium_') == 'true'
-            return {"email": email, "is_premium_": is_premium_}
-        else:
-            # If user not found in Cognito, treat as non-premium
-            return {"email": email, "is_premium_": False}
-    except Exception as e:
-        print(f"Error fetching user {email} from Cognito: {e}")
-        # Fallback to non-premium if Cognito lookup fails
-        return {"email": email, "is_premium_": False}
-
-"""
 def get_user(email):
     cognito_client = boto3.client("cognito-idp", region_name=current_app.config['REGION'])
     user_pool_id = current_app.config['USER_POOL_ID']
