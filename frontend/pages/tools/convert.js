@@ -351,7 +351,8 @@ export default function ConvertPage() {
       
       // Get user email from localStorage
       const userEmail = localStorage.getItem('userEmail') || 'guest@example.com';
-      formData.append("user_email", userEmail);
+      // CHANGE: send under "email" so backend picks it up
+      formData.append("email", userEmail);
 
       const response = await fetch(`${API_BASE_URL}/api/convert-${outputFormat}`, {
         method: "POST",

@@ -48,7 +48,7 @@ def convert_jpg_to_pdf():
             temp_file_paths.append(temp_path)
         
         # Check restrictions
-        email = request.form.get("email", "anonymous@example.com")
+        email = request.form.get("email") or request.form.get("user_email") or "anonymous@example.com"
         restriction_error = check_convert_pdf_restrictions(email, temp_file_paths)
         if restriction_error:
             return jsonify(restriction_error), 403

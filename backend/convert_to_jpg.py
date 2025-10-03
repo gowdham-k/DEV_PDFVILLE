@@ -19,7 +19,7 @@ def convert_pdf_to_jpg():
             return jsonify({"error": "No file provided"}), 400
 
         # Get user email from form (default = free user)
-        email = request.form.get("email", "free@example.com")
+        email = request.form.get("email") or request.form.get("user_email") or "free@example.com"
 
         # Save file temporarily for restriction check
         temp_dir = create_temp_dir()

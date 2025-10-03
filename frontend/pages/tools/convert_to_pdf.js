@@ -492,9 +492,13 @@ export default function ConvertToPDFPage() {
       
       formData.append("input_format", inputFormat);
 
+      // ADD: send email so backend can check premium status
+      const userEmail = localStorage.getItem('userEmail') || 'guest@example.com';
+      formData.append("email", userEmail);
+      
       const response = await fetch(`${API_BASE_URL}/api/convert-${inputFormat}-to-pdf`, {
-        method: "POST",
-        body: formData,
+          method: "POST",
+          body: formData,
       });
 
       if (!response.ok) {
