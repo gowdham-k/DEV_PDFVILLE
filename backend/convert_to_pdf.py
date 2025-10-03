@@ -31,8 +31,10 @@ def convert_to_pdf():
         
         # Check restrictions for PDF files
         email = request.form.get("email") or request.form.get("user_email") or "anonymous@example.com"
+        print(f"[DEBUG] /convert-to-pdf email={email}")
         restriction_error = check_convert_pdf_restrictions(email, [temp_input_path])
         if restriction_error:
+            print(f"[DEBUG] /convert-to-pdf restriction: {restriction_error}")
             return jsonify(restriction_error), 403
         
         # Process based on file type

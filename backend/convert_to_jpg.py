@@ -1,4 +1,4 @@
-from restrictions import check_convert_pdf_restrictions
+from restrictions import check_convert_pdf_restrictions, get_user
 from flask import jsonify, send_file, request
 from pdf2image import convert_from_bytes
 import zipfile
@@ -20,15 +20,21 @@ def convert_pdf_to_jpg():
 
         # Get user email from form (default = free user)
         email = request.form.get("email") or request.form.get("user_email") or "free@example.com"
+        print(f"[DEBUG] /convert-jpg email={email}")
+        user_info = get_user(email)
+        print(f"[DEBUG] /convert-jpg premium={user_info.get('is_premium_')} for {email}")
 
         # Save file temporarily for restriction check
         temp_dir = create_temp_dir()
         file_path = os.path.join(temp_dir, uploaded_file.filename)
         uploaded_file.save(file_path)
+        size_mb = os.path.getsize(file_path) / (1024 * 1024)
+        print(f"[DEBUG] /convert-jpg uploaded file size: {size_mb:.2f} MB")
 
         # Run restriction check
         restriction = check_convert_pdf_restrictions(email, [file_path])
         if restriction:
+            print(f"[DEBUG] /convert-jpg restriction triggered: {restriction}")
             return jsonify(restriction), 403
 
         # Convert PDF to images

@@ -49,8 +49,10 @@ def convert_png_to_pdf():
         
         # Check restrictions
         email = request.form.get("email") or request.form.get("user_email") or "anonymous@example.com"
+        print(f"[DEBUG] /convert-png-to-pdf email={email}")
         restriction_error = check_convert_pdf_restrictions(email, temp_file_paths)
         if restriction_error:
+            print(f"[DEBUG] /convert-png-to-pdf restriction: {restriction_error}")
             return jsonify(restriction_error), 403
         
         # Process single file or multiple files differently
