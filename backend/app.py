@@ -503,12 +503,35 @@ def get_profile():
     except Exception as e:
         return jsonify({"error": f"Failed to fetch profile: {str(e)}"}), 500
 
-@app.route('/debug/check-user/<email>', methods=['GET'])
+@app.route(prefix_route('/debug/check-user/<email>'), methods=['GET'])
 def debug_check_user(email):
     from restrictions import get_user
-    user_info = get_user(email)
-    return jsonify(user_info)
+    import boto3
     
+    try:
+        cognito = boto3.client("cognito-idp", region_name=REGION)
+        response = cognito.list_users(
+            UserPoolId=USER_POOL_ID,
+            Filter=f'email = "{email}"',
+            Limit=1
+        )
+        
+        if response['Users']:
+            all_attributes = response['Users'][0]['Attributes']
+            user_dict = {attr['Name']: attr['Value'] for attr in all_attributes}
+            
+            return jsonify({
+                "found": True,
+                "all_cognito_attributes": all_attributes,
+                "is_premium_value": user_dict.get('custom:is_premium_', 'NOT_SET'),
+                "user_info_from_get_user": get_user(email)
+            })
+        else:
+            return jsonify({"found": False, "message": "User not found in Cognito"})
+            
+    except Exception as e:
+        return jsonify({"error": str(e)})
+
 @app.route(prefix_route("/refresh-token"), methods=["POST"])
 def refresh_token():
     """Refresh access token using refresh token"""
