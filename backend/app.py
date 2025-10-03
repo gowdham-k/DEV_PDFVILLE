@@ -683,63 +683,6 @@ def test_cognito_upgrade():
         return jsonify({"error": f"Failed to fetch user: {str(e)}"}), 500
 
 
-# Stripe webhook handler
-@app.route('/stripe/webhook', methods=['POST'])
-def stripe_webhook():
-    payload = request.data
-    sig_header = request.headers.get('Stripe-Signature')
-    
-    # Get the webhook secret from environment variables
-    webhook_secret = os.environ.get('STRIPE_WEBHOOK_SECRET')
-    
-    try:
-        # Verify the webhook signature
-        import stripe
-        event = stripe.Webhook.construct_event(
-            payload, sig_header, webhook_secret
-        )
-        # Example handling
-        if event.get('type') == 'checkout.session.completed':
-            session = event.get('data', {}).get('object', {})
-            customer_email = session.get('customer_details', {}).get('email') or session.get('customer_email')
-            if customer_email:
-                # Use the new function to update Cognito
-                if set_pro_subscription(customer_email, True):
-                    print(f"[Stripe Webhook] Successfully upgraded {customer_email} in Cognito.")
-                    
-                    # Store payment data in database
-                    try:
-                        db = next(get_db())
-                        
-                        # Calculate subscription expiry (1 year from now)
-                        from datetime import datetime, timedelta
-                        subscription_expiry = datetime.utcnow() + timedelta(days=365)
-                        
-                        # Prepare payment data
-                        payment_data = {
-                            'payment_id': session.get('id'),
-                            'payment_amount': session.get('amount_total'),
-                            'payment_date': datetime.utcnow(),
-                            'payment_method': session.get('payment_method_types', ['card'])[0],
-                            'payment_status': 'completed',
-                            'subscription_expiry': subscription_expiry
-                        }
-                        
-                        # Update user payment info in database
-                        updated_user = db_utils.update_user_payment_info(db, customer_email, payment_data)
-                        if updated_user:
-                            print(f"[Stripe Webhook] Successfully stored payment data for {customer_email} in database.")
-                        else:
-                            print(f"[Stripe Webhook] Failed to store payment data for {customer_email} in database.")
-                    except Exception as db_error:
-                        print(f"[Stripe Webhook] Database error: {db_error}")
-                else:
-                    print(f"[Stripe Webhook] Failed to upgrade {customer_email} in Cognito.")
-        return jsonify({'status': 'ok'}), 200
-    except Exception as e:
-        print(f"[Stripe Webhook Error] {e}")
-        return jsonify({'error': 'invalid webhook'}), 400
-    
 
 # ---------- Protected PDF Routes ----------
 

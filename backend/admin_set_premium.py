@@ -51,7 +51,7 @@ def main():
     email = sys.argv[1]
     if set_premium(email, True):
         print("🎉 Upgrade completed. Frontend will show Premium after next /api/profile call.")
-        print("ℹ️ Note: Database subscription_status is used for reporting; Stripe webhook updates it automatically.")
+        # Removed outdated Stripe note
     else:
         sys.exit(2)
 

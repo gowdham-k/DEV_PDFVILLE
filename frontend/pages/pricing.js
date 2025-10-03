@@ -1,11 +1,7 @@
 "use client";
 import { useState, useContext } from "react";
 import { CategoryContext } from "../components/layout";
-import { loadStripe } from '@stripe/stripe-js';
 import { API_BASE_URL } from "../components/config";
-
-// Initialize Stripe
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
 
 const plans = [
   {
@@ -31,7 +27,7 @@ const plans = [
   {
     name: "Premium",
     price: "₹200 / month",
-    priceId: "price_1RysTKSGlE9lg1kM7ONgaYqG", // Replace with your actual Stripe price ID
+    // Removed Stripe price ID
     users: "1-25",
     features: [
       "All Basic Tools + More",
@@ -83,10 +79,10 @@ const faqs = [
     category: "Billing & Payments",
     questions: [
       { q: "Can I share single billing for multiple accounts?", a: "Yes, Premium and Business plans support consolidated billing for multiple users." },
-      { q: "What payment methods do you accept?", a: "We accept all major credit/debit cards, UPI, and net banking through Stripe." },
+      { q: "What payment methods do you accept?", a: "Premium upgrades are managed via your account settings. For Business plans and invoicing, please contact our sales team." },
       { q: "What if I need to change my plan partway through my contract?", a: "You can upgrade or downgrade anytime, and billing will be adjusted accordingly." },
       { q: "Can you invoice me?", a: "Yes, invoices can be generated for Business plan subscriptions." },
-      { q: "Is my payment information secure?", a: "Yes, all payments are processed securely through Stripe with industry-standard encryption." },
+      { q: "Is my payment information secure?", a: "We follow industry-standard security practices. If you need assistance, reach out to our support team." },
     ],
   },
 ];
@@ -122,51 +118,14 @@ export default function PricingPage() {
       return;
     }
 
-    // Handle Premium plan with Stripe
-    setLoading(true);
-    
-    try {
-      // Use the local Next.js API route
-      const response = await fetch(`/api/create-checkout-session`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          priceId: plan.priceId,
-          planName: plan.name,
-        }),
-      });
-
-      const session = await response.json();
-
-      if (session.error) {
-        console.error('Error creating checkout session:', session.error);
-        alert('Failed to start checkout process. Please try again.');
-        return;
-      }
-
-      // Redirect to Stripe Checkout
-      if (session.url) {
-        // Use the URL directly if available
-        window.location.href = session.url;
+    if (plan.name === "Premium") {
+      // Cognito-only flow: redirect to upgrade page or login first
+      if (!isAuthenticated) {
+        window.location.href = "/login";
       } else {
-        // Fall back to the old method if url is not available
-        const stripe = await stripePromise;
-        const { error } = await stripe.redirectToCheckout({
-          sessionId: session.sessionId,
-        });
-
-        if (error) {
-          console.error('Stripe redirect error:', error);
-          alert('Payment redirect failed. Please try again.');
-        }
+        window.location.href = "/upgrade";
       }
-    } catch (error) {
-      console.error('Subscription error:', error);
-      alert('Something went wrong. Please try again.');
-    } finally {
-      setLoading(false);
+      return;
     }
   };
 
