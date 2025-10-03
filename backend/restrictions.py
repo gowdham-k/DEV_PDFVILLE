@@ -27,6 +27,13 @@ def get_user(email):
             is_premium_ = user_attributes.get('custom:is_premium_') == 'true'
             print(f"[DEBUG] is_premium_ value: {is_premium_}")  # ADD THIS
             return {"email": email, "is_premium_": is_premium_}
+        else:
+            # No user found in Cognito; treat as non-premium by default
+            return {"email": email, "is_premium_": False}
+    except Exception as e:
+        # Handle Cognito errors gracefully and default to non-premium
+        print(f"Error fetching user from Cognito: {e}")
+        return {"email": email, "is_premium_": False}
 
 def check_restrictions(email, file_paths):
     user = get_user(email) # Now gets user from Cognito
