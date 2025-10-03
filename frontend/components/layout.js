@@ -61,7 +61,7 @@ export default function Layout({ children }) {
   const [loading, setLoading] = useState(false);
   const [activeSubmenu, setActiveSubmenu] = useState(null);
 
-  const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://pdfville.com:5000";
+  // Using imported API_BASE_URL from components/config;
 
 const sidebarTools = [
   { name: "Home", path: "/", icon: "\u{1F3E0}" },        

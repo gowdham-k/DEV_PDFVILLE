@@ -12,11 +12,12 @@ const determineApiUrl = () => {
       window.location.hostname === 'localhost' || 
       window.location.hostname === '127.0.0.1';
     
-    return isLocalhost ? 'https://dev.pdfville.com/api' : 'https://dev.pdfville.com/api';
+    // For localhost, assume backend runs on port 5000 over HTTP; otherwise use HTTPS dev domain
+    return isLocalhost ? 'http://localhost:5000' : 'https://dev.pdfville.com';
   }
   
   // Default fallback for server-side rendering
-  return 'https://dev.pdfville.com/api';
+  return 'https://dev.pdfville.com';
 };
 
 export const API_BASE_URL = determineApiUrl();
