@@ -83,6 +83,22 @@ load_dotenv('.env', override=True)
 # Initialize Flask app
 app = Flask(__name__)
 
+# Increase server-side upload limit so Flask won’t reject larger files
+# Note: If a reverse proxy (e.g., Nginx) is in front, that proxy’s limit must also be raised.
+max_upload_mb = int(os.environ.get('MAX_UPLOAD_MB', '200'))
+app.config['MAX_CONTENT_LENGTH'] = max_upload_mb * 1024 * 1024
+
+# Provide a clear JSON response if Flask triggers a 413 due to MAX_CONTENT_LENGTH
+from flask import jsonify
+
+@app.errorhandler(413)
+def handle_request_entity_too_large(e):
+    return jsonify({
+        "error": "File size exceeds the server upload limit.",
+        "show_upgrade": True,
+        "limit_mb": max_upload_mb
+    }), 413
+
 # Configure CORS based on environment
 cors_origins = os.environ.get('CORS_ORIGINS', '*')
 if cors_origins == '*':
@@ -610,7 +626,6 @@ def reset_password():
     except Exception as e:
         print(f"❌ Password reset error for {email}: {str(e)}")
         return jsonify({"error": f"Password reset failed: {str(e)}"}), 400
-# ...testing...
 
 @app.route('/test/cognito-upgrade', methods=['POST'])
 def test_cognito_upgrade():
