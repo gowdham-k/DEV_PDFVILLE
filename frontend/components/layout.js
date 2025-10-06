@@ -279,8 +279,7 @@ const MobileMenu = ({
     </div>
   );
 };
-    
-const user_email = user.email
+
 
   const handleLogout = async () => {
     try {
@@ -862,4 +861,7 @@ const user_email = user.email
       </div>
     </CategoryContext.Provider>
   );
+  user_email = user.email || null;
 }
+
+export { user_email }
