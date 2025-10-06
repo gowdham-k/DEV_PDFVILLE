@@ -861,7 +861,4 @@ const MobileMenu = ({
       </div>
     </CategoryContext.Provider>
   );
-  user_email = user.email || null;
 }
-
-export { user_email }

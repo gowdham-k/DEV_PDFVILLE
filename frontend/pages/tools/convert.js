@@ -3,7 +3,6 @@ import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { API_BASE_URL } from "../../components/config";
 import { useRouter } from "next/navigation";
-import { user_email } from "../../components/layout";
 
 export default function ConvertPage() {
   const searchParams = useSearchParams();
@@ -17,6 +16,13 @@ export default function ConvertPage() {
   const [formatFromUrl, setFormatFromUrl] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [upgradeMessage, setUpgradeMessage] = useState("");
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [user, setUser] = useState(null);
+
+  // Check authentication status and get user data
+  useEffect(() => {
+    checkAuthStatus();
+  }, []);
 
   // Handle format parameter from URL only once on initial load
   useEffect(() => {
@@ -28,6 +34,40 @@ export default function ConvertPage() {
       setFormatFromUrl(true);
     }
   }, []); // Empty dependency array ensures this runs only once on mount
+  
+  // Authentication check function from layout.js
+  const checkAuthStatus = async () => {
+    if (typeof window === 'undefined') return;
+    
+    const token = localStorage.getItem("access_token");
+    
+    if (token) {
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/profile`, {
+          headers: {
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json"
+          }
+        });
+        
+        if (response.ok) {
+          const userData = await response.json();
+          // Extract custom:is_premium_ attribute
+          const isPremium = userData.attributes && userData.attributes['custom:is_premium_'] === 'true';
+          setUser({ ...userData, isPremium }); // Add isPremium to user state
+          setIsAuthenticated(true);
+          console.log("User email:", userData.email);
+        } else {
+          localStorage.clear();
+          setIsAuthenticated(false);
+        }
+      } catch (error) {
+        console.error("Auth check failed:", error);
+        localStorage.clear();
+        setIsAuthenticated(false);
+      }
+    }
+  };
 
   // Handle user selection of a different format
   const handleFormatSelect = (format) => {
@@ -351,7 +391,7 @@ export default function ConvertPage() {
       formData.append("output_format", outputFormat);
       
       // Get user email from localStorage
-      const userEmail = user_email;
+      const userEmail = user.email;
       // CHANGE: send under "email" so backend picks it up
       formData.append("email", userEmail);
 
