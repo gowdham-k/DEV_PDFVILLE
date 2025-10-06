@@ -5,7 +5,7 @@ import zipfile
 from io import BytesIO
 import logging
 from PyPDF2 import PdfWriter, PdfReader
-from restrictions import check_restrictions
+from restrictions import check_unlock_pdf_restrictions
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -75,11 +75,8 @@ def unlock_pdf_file(input_pdf_path, password=None):
 def unlock_pdf():
     """Unlock password-protected PDF files - main function for Flask route"""
     try:
-        # Apply restrictions check
-        # Uncomment to enable restrictions
-        # restriction_result = check_restrictions(request)
-        # if restriction_result:
-        #     return restriction_result
+        # Get email from form data (default free user for demo)
+        email = request.form.get("email", "free@example.com")
         
         # Check if files were uploaded
         if 'files' not in request.files:
@@ -109,6 +106,18 @@ def unlock_pdf():
         
         # Create temporary directory
         with tempfile.TemporaryDirectory() as temp_dir:
+            # Save all files temporarily for restriction check
+            temp_file_paths = []
+            for i, file in enumerate(pdf_files):
+                temp_input_path = os.path.join(temp_dir, f"input_{i}_{file.filename}")
+                file.save(temp_input_path)
+                temp_file_paths.append(temp_input_path)
+            
+            # Apply premium restrictions check
+            restriction_result = check_unlock_pdf_restrictions(email, temp_file_paths)
+            if restriction_result:
+                return jsonify(restriction_result), 403
+            
             processed_files = []
             failed_files = []
             
@@ -116,9 +125,7 @@ def unlock_pdf():
             for i, file in enumerate(pdf_files):
                 logger.info(f"Processing file {i+1}/{len(pdf_files)}: {file.filename}")
                 
-                # Save uploaded file temporarily
-                temp_input_path = os.path.join(temp_dir, f"input_{i}_{file.filename}")
-                file.save(temp_input_path)
+                temp_input_path = temp_file_paths[i]
                 
                 try:
                     # Unlock PDF

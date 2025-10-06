@@ -15,6 +15,8 @@ export default function SecurePage() {
   const [file, setFile] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [dragActive, setDragActive] = useState(false);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [upgradeMessage, setUpgradeMessage] = useState('');
   const [securityOptions, setSecurityOptions] = useState({
     password: '',
     confirmPassword: '',
@@ -26,6 +28,11 @@ export default function SecurePage() {
     }
   });
   const [passwordStrength, setPasswordStrength] = useState('');
+
+  // Function to close the upgrade modal
+  const closeUpgradeModal = () => {
+    setShowUpgradeModal(false);
+  };
 
   const handleFileChange = (e) => {
     if (e.target.files.length > 0) {
@@ -104,8 +111,24 @@ export default function SecurePage() {
         body: formData,
       });
 
+      // Check for error responses (including 403)
       if (!response.ok) {
-        throw new Error(`Server error: ${response.status}`);
+        const contentType = response.headers.get("content-type");
+        if (contentType && contentType.includes("application/json")) {
+          const errorData = await response.json();
+          
+          // Check if it's a restriction error with upgrade option
+          if (response.status === 403 && errorData.show_upgrade) {
+            setUpgradeMessage(errorData.error || errorData.message);
+            setShowUpgradeModal(true);
+            return;
+          }
+          
+          // Otherwise throw a generic error
+          throw new Error(errorData.error || `Server error: ${response.status}`);
+        } else {
+          throw new Error(`Server error: ${response.status}`);
+        }
       }
 
       const blob = await response.blob();
@@ -117,9 +140,15 @@ export default function SecurePage() {
       window.URL.revokeObjectURL(url);
     } catch (error) {
       console.error('Error:', error);
-      alert("Error: " + error.message);
+      
+      // Show upgrade modal for free users instead of generic error
+      setUpgradeMessage("Upgrade to premium to secure PDF files of any size with advanced password protection.");
+      setShowUpgradeModal(true);
+      // Don't show any error alert, just the modal
     } finally {
-      setIsProcessing(false);
+      if (!showUpgradeModal) {
+        setIsProcessing(false);
+      }
     }
   };
 
@@ -672,6 +701,13 @@ export default function SecurePage() {
           </div>
         </div>
       </div>
+      
+      {/* Upgrade Modal */}
+      <UpgradeModalRenderer 
+        show={showUpgradeModal} 
+        msg={upgradeMessage} 
+        onClose={closeUpgradeModal} 
+      />
     </div>
   );
 }

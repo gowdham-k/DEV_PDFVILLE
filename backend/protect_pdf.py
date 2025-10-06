@@ -1,4 +1,4 @@
-from restrictions import check_restrictions, get_user
+from restrictions import check_protect_pdf_restrictions
 from flask import jsonify, send_file, request
 import pikepdf
 import traceback
@@ -23,10 +23,10 @@ def protect_pdf():
         temp_path = os.path.join(temp_dir, uploaded_file.filename)
         uploaded_file.save(temp_path)
 
-        # Run restrictions check
-        restriction = check_restrictions(email, [temp_path])
+        # Run restrictions check for protect PDF
+        restriction = check_protect_pdf_restrictions(email, [temp_path])
         if restriction:
-            return jsonify({"error": restriction}), 403
+            return jsonify(restriction), 403
 
         # Get password from request
         password = request.form.get("password")

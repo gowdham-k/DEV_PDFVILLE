@@ -13,8 +13,15 @@ export default function UnlockPdfPage() {
   const [files, setFiles] = useState([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [dragActive, setDragActive] = useState(false);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [upgradeMessage, setUpgradeMessage] = useState('');
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+
+  // Function to close the upgrade modal
+  const closeUpgradeModal = () => {
+    setShowUpgradeModal(false);
+  };
 
   const handleFileChange = (e) => {
     setFiles(Array.from(e.target.files));
@@ -74,9 +81,24 @@ export default function UnlockPdfPage() {
         body: formData,
       });
 
+      // Check for error responses (including 403)
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || `Server error: ${response.status}`);
+        const contentType = response.headers.get("content-type");
+        if (contentType && contentType.includes("application/json")) {
+          const errorData = await response.json();
+          
+          // Check if it's a restriction error with upgrade option
+          if (response.status === 403 && errorData.show_upgrade) {
+            setUpgradeMessage(errorData.error || errorData.message);
+            setShowUpgradeModal(true);
+            return;
+          }
+          
+          // Otherwise throw a generic error
+          throw new Error(errorData.error || `Server error: ${response.status}`);
+        } else {
+          throw new Error(`Server error: ${response.status}`);
+        }
       }
 
       // Check for warnings in response headers
@@ -94,9 +116,15 @@ export default function UnlockPdfPage() {
       window.URL.revokeObjectURL(url);
     } catch (error) {
       console.error('Error:', error);
-      alert("Error: " + error.message);
+      
+      // Show upgrade modal for free users instead of generic error
+      setUpgradeMessage("Upgrade to premium to unlock PDF files of any size and remove password restrictions.");
+      setShowUpgradeModal(true);
+      // Don't show any error alert, just the modal
     } finally {
-      setIsProcessing(false);
+      if (!showUpgradeModal) {
+        setIsProcessing(false);
+      }
     }
   };
 
@@ -511,6 +539,13 @@ export default function UnlockPdfPage() {
           </div>
         </div>
       </div>
+      
+      {/* Upgrade Modal */}
+      <UpgradeModalRenderer 
+        show={showUpgradeModal} 
+        msg={upgradeMessage} 
+        onClose={closeUpgradeModal} 
+      />
     </div>
   );
 }

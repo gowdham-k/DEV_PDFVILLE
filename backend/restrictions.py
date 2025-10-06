@@ -190,6 +190,92 @@ def check_convert_pdf_restrictions(email, file_paths):
     return None
 
 
+def check_protect_pdf_restrictions(email, file_paths):
+    """
+    Check restrictions specific to the protect PDF feature (adding password protection).
+    
+    Args:
+        email: User's email
+        file_paths: List of file paths to check
+        
+    Returns:
+        Error message if restrictions are violated, None otherwise
+    """
+    user = get_user(email)
+    
+    # Premium users have no restrictions
+    if user["is_premium_"]:
+        return None
+        
+    # Free user restrictions for protect PDF
+    FREE_MAX_FILES = 1  # Free users can only protect one file at a time
+    FREE_MAX_FILE_SIZE_MB = 5  # Free users limited to 5MB files
+    FREE_MAX_PAGES = 10  # Free users can only protect PDFs with up to 10 pages
+    
+    # Check number of files
+    if len(file_paths) > FREE_MAX_FILES:
+        return {"error": "Free users can only protect one PDF file at a time. Upgrade to premium for batch protection.", "show_upgrade": True}
+    
+    # Check file size and page count
+    for path in file_paths:
+        size_mb = (os.path.getsize(path) / (1024 * 1024))
+        if size_mb > FREE_MAX_FILE_SIZE_MB:
+            return {"error": f"File {os.path.basename(path)} exceeds 5MB free limit. Premium users can protect larger files.", "show_upgrade": True}
+        
+        # Check page count for PDF files
+        try:
+            reader = PdfReader(path)
+            if len(reader.pages) > FREE_MAX_PAGES:
+                return {"error": f"File {os.path.basename(path)} exceeds the 10-page free limit. Upgrade to premium to protect larger PDFs.", "show_upgrade": True}
+        except Exception as e:
+            print(f"Error reading PDF pages for restriction check: {e}")
+            return {"error": f"Could not process file {os.path.basename(path)} for restriction check.", "show_upgrade": False}
+    
+    return None
+
+def check_unlock_pdf_restrictions(email, file_paths):
+    """
+    Check restrictions specific to the unlock PDF feature (removing password protection).
+    
+    Args:
+        email: User's email
+        file_paths: List of file paths to check
+        
+    Returns:
+        Error message if restrictions are violated, None otherwise
+    """
+    user = get_user(email)
+    
+    # Premium users have no restrictions
+    if user["is_premium_"]:
+        return None
+        
+    # Free user restrictions for unlock PDF
+    FREE_MAX_FILES = 1  # Free users can only unlock one file at a time
+    FREE_MAX_FILE_SIZE_MB = 5  # Free users limited to 5MB files
+    FREE_MAX_PAGES = 10  # Free users can only unlock PDFs with up to 10 pages
+    
+    # Check number of files
+    if len(file_paths) > FREE_MAX_FILES:
+        return {"error": "Free users can only unlock one PDF file at a time. Upgrade to premium for batch unlocking.", "show_upgrade": True}
+    
+    # Check file size and page count
+    for path in file_paths:
+        size_mb = (os.path.getsize(path) / (1024 * 1024))
+        if size_mb > FREE_MAX_FILE_SIZE_MB:
+            return {"error": f"File {os.path.basename(path)} exceeds 5MB free limit. Premium users can unlock larger files.", "show_upgrade": True}
+        
+        # Check page count for PDF files
+        try:
+            reader = PdfReader(path)
+            if len(reader.pages) > FREE_MAX_PAGES:
+                return {"error": f"File {os.path.basename(path)} exceeds the 10-page free limit. Upgrade to premium to unlock larger PDFs.", "show_upgrade": True}
+        except Exception as e:
+            print(f"Error reading PDF pages for restriction check: {e}")
+            return {"error": f"Could not process file {os.path.basename(path)} for restriction check.", "show_upgrade": False}
+    
+    return None
+
 def check_split_pdf_restrictions(email, file_path, pages_to_split_count, total_pages):
     """
     Check restrictions specific to the split PDF feature.
