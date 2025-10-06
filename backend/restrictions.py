@@ -188,4 +188,58 @@ def check_convert_pdf_restrictions(email, file_paths):
                 return {"error": f"Could not process file {os.path.basename(path)} for restriction check.", "show_upgrade": False}
     
     return None
+
+
+def check_split_pdf_restrictions(email, file_path, pages_to_split_count, total_pages):
+    """
+    Check restrictions specific to the split PDF feature.
+
+    Args:
+        email: User's email
+        file_path: Path to the PDF being split
+        pages_to_split_count: Number of output pages requested (range or custom)
+        total_pages: Total number of pages in the source PDF
+
+    Returns:
+        Dict with error and show_upgrade if restrictions are violated, None otherwise
+    """
+    user = get_user(email)
+
+    # Premium users have no restrictions
+    if user["is_premium_"]:
+        return None
+
+    # Free user restrictions for split PDF
+    FREE_MAX_FILE_SIZE_MB = 5      # Max input PDF size
+    FREE_MAX_TOTAL_PAGES = 10      # Max total pages in input
+    FREE_MAX_OUTPUT_PAGES = 10     # Max pages that can be split out per operation
+
+    # File size check
+    try:
+        size_mb = (os.path.getsize(file_path) / (1024 * 1024))
+        if size_mb > FREE_MAX_FILE_SIZE_MB:
+            return {
+                "error": f"File {os.path.basename(file_path)} exceeds 5MB free limit. Upgrade to premium to split larger PDFs.",
+                "show_upgrade": True
+            }
+    except Exception as e:
+        print(f"Error checking file size for split restrictions: {e}")
+        # Non-upgrade error: let the client know something failed
+        return {"error": "Could not check file size for restrictions.", "show_upgrade": False}
+
+    # Total pages check
+    if total_pages > FREE_MAX_TOTAL_PAGES:
+        return {
+            "error": f"PDF has {total_pages} pages which exceeds the 10-page free limit. Upgrade to premium to split larger PDFs.",
+            "show_upgrade": True
+        }
+
+    # Output pages check
+    if pages_to_split_count > FREE_MAX_OUTPUT_PAGES:
+        return {
+            "error": f"Requested to split {pages_to_split_count} pages which exceeds the 10-page free limit. Upgrade to premium to split more pages.",
+            "show_upgrade": True
+        }
+
+    return None
     

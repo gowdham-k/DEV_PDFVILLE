@@ -1,4 +1,4 @@
-from restrictions import check_restrictions, get_user
+from restrictions import check_split_pdf_restrictions, get_user
 from flask import jsonify, send_file, request
 from PyPDF2 import PdfReader, PdfWriter
 import zipfile
@@ -22,13 +22,7 @@ def split_pdf():
         file_path = os.path.join(temp_dir, uploaded_file.filename)
         uploaded_file.save(file_path)
 
-        # Check restrictions
-        email = request.form.get("email", "free@example.com")  # default demo email
-        restriction = check_restrictions(email, [file_path])
-        if restriction:
-            return jsonify({"error": restriction}), 403
-
-        # Now continue with splitting
+        # Read PDF to determine pages and validate ranges
         reader = PdfReader(file_path)
         total_pages = len(reader.pages)
 
@@ -57,6 +51,13 @@ def split_pdf():
         else:
             pages_to_split = range(total_pages)
             split_type = "all"
+
+        # Apply split-specific restrictions after determining requested output pages
+        email = request.form.get("email", "free@example.com")  # default demo email
+        pages_to_split_count = len(list(pages_to_split))
+        restriction = check_split_pdf_restrictions(email, file_path, pages_to_split_count, total_pages)
+        if restriction:
+            return jsonify(restriction), 403
 
         pdf_paths = []
         for i in pages_to_split:
