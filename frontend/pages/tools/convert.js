@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { API_BASE_URL } from "../../components/config";
 import { useRouter } from "next/navigation";
+import { user_email } from "../../components/layout";
 
 export default function ConvertPage() {
   const searchParams = useSearchParams();
@@ -350,7 +351,7 @@ export default function ConvertPage() {
       formData.append("output_format", outputFormat);
       
       // Get user email from localStorage
-      const userEmail = localStorage.getItem('userEmail') || 'guest@example.com';
+      const userEmail = user_email;
       // CHANGE: send under "email" so backend picks it up
       formData.append("email", userEmail);
 

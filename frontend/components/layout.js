@@ -39,7 +39,6 @@ const tools = [
 ];
 
 const categories = ["All", "Organize PDF", "Convert PDF", "Convert to PDF", "Optimize PDF", "Secure PDF"];
-
 export default function Layout({ children }) {
   const [isMobile, setIsMobile] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -281,6 +280,7 @@ const MobileMenu = ({
   );
 };
     
+const user_email = user.email
 
   const handleLogout = async () => {
     try {
