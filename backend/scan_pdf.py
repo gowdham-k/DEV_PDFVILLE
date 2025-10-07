@@ -10,6 +10,7 @@ from PIL import Image
 from io import BytesIO
 import pytesseract
 from pdf2image import convert_from_bytes
+from restrictions import check_restrictions, check_scan_pdf_restrictions
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -51,17 +52,48 @@ def scan_pdf():
     Route handler for PDF scanning
     """
     logger.info("PDF scan request received")
-    
+    email = request.form.get("email", "free@example.com")
+
     # Check if files were uploaded
     if 'files' not in request.files:
         logger.error("No files part in the request")
         return jsonify({"error": "No files uploaded"}), 400
-    
+
     files = request.files.getlist('files')
     if not files or files[0].filename == '':
         logger.error("No files selected")
         return jsonify({"error": "No files selected"}), 400
-    
+
+    with tempfile.TemporaryDirectory() as temp_dir:
+        # Save files to temporary directory for restriction checks
+        temp_file_paths = []
+        for file in files:
+            temp_path = os.path.join(temp_dir, file.filename)
+            file.save(temp_path)
+            temp_file_paths.append(temp_path)
+            file.seek(0)  # Reset file pointer for later use
+        
+        # Apply general restrictions check
+        restriction = check_restrictions(email, temp_file_paths)
+        if restriction:
+            logger.warning(f"Restriction failed: {restriction}")
+            return jsonify({"error": restriction}), 403
+            
+        # Apply premium-only feature check
+        premium_restriction = check_scan_pdf_restrictions(email, temp_file_paths)
+        if premium_restriction:
+            logger.warning(f"Premium restriction failed: {premium_restriction}")
+            return jsonify(premium_restriction), 403
+            temp_path = os.path.join(temp_dir, file.filename)
+            file.seek(0)
+            file.save(temp_path)
+            temp_file_paths.append(temp_path)
+
+        # Apply premium restrictions check
+        restriction_result = check_scan_pdf_restrictions(email, temp_file_paths)
+        if restriction_result:
+            return jsonify(restriction_result), 403
+
     # Get parameters
     language = request.form.get('language', 'eng')
     dpi = int(request.form.get('dpi', 300))
@@ -73,19 +105,20 @@ def scan_pdf():
     with tempfile.TemporaryDirectory() as temp_dir:
         processed_files = []
         failed_files = []
-        
+
         # Process each PDF
         for i, file in enumerate(files):
             if not file.filename.lower().endswith('.pdf'):
                 logger.warning(f"Skipping non-PDF file: {file.filename}")
                 continue
-                
+
             logger.info(f"Processing file {i+1}/{len(files)}: {file.filename}")
-            
+
             try:
                 # Read the PDF file
+                file.seek(0)
                 pdf_bytes = file.read()
-                
+
                 # Perform OCR
                 text_content, error = scan_pdf_to_text(pdf_bytes, dpi, language)
                 

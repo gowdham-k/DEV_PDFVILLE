@@ -22,6 +22,14 @@ export default function WatermarkPage() {
   const [watermarkColor, setWatermarkColor] = useState("#FF0000");
   const [fontSize, setFontSize] = useState(48);
   const [errorMessage, setErrorMessage] = useState("");
+  
+  // Premium modal state
+  const { showModal: showUpgradeModal, setShowModal: setShowUpgradeModal, modalMsg: upgradeMessage, setModalMsg: setUpgradeMessage } = useUpgradeModal();
+  
+  // Close upgrade modal
+  const closeUpgradeModal = () => {
+    setShowUpgradeModal(false);
+  };
 
   // Authentication check removed - feature now available without login
 
@@ -110,8 +118,18 @@ export default function WatermarkPage() {
       console.log("Watermark response OK:", response.ok);
 
       if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        
+        // Check if this is a premium restriction error
+        if (response.status === 403 && errorData.show_upgrade) {
+          setUpgradeMessage(errorData.error || "This feature requires a premium subscription");
+          setShowUpgradeModal(true);
+          setIsProcessing(false);
+          return;
+        }
+        
         console.error(`Watermark request failed with status: ${response.status}`);
-        throw new Error(`Server error: ${response.status}`);
+        throw new Error(errorData.error || `Server error: ${response.status}`);
       }
 
       const blob = await response.blob();
@@ -646,6 +664,31 @@ export default function WatermarkPage() {
           </div>
         </div>
       </div>
+      
+      {showUpgradeModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center" style={{position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+          <div className="bg-white p-6 rounded-xl shadow-xl text-center max-w-sm" style={{backgroundColor: 'white', padding: '24px', borderRadius: '12px', maxWidth: '400px', position: 'relative', zIndex: 10000, margin: 'auto'}}>
+            <h2 className="text-xl font-bold mb-3" style={{fontSize: '20px', fontWeight: 'bold', marginBottom: '12px'}}>Upgrade Required</h2>
+            <p className="mb-4" style={{marginBottom: '16px'}}>{upgradeMessage}</p>
+            <div className="flex justify-center gap-4" style={{display: 'flex', justifyContent: 'center', gap: '16px'}}>
+              <button
+                onClick={() => window.location.href = "/pricing"}
+                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+                style={{backgroundColor: '#3B82F6', color: 'white', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer'}}
+              >
+                Upgrade Now
+              </button>
+              <button
+                onClick={closeUpgradeModal}
+                className="bg-gray-300 px-4 py-2 rounded-lg hover:bg-gray-400"
+                style={{backgroundColor: '#D1D5DB', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer'}}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

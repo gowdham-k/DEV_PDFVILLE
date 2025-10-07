@@ -2,6 +2,14 @@
 import { useState } from "react";
 import { API_BASE_URL } from "../components/config";
 import { useRouter } from "next/navigation";
+import UpgradeModal from "../components/UpgradeModal";
+
+// --- Premium modal handling ---
+function useUpgradeModal() {
+  const [showModal, setShowModal] = useState(false);
+  const [modalMsg, setModalMsg] = useState("");
+  return { showModal, setShowModal, modalMsg, setModalMsg };
+}
 
 // Define keyframes for spinner animation
 const spinKeyframes = `
@@ -21,6 +29,15 @@ export default function ScanPDFPage() {
   const [language, setLanguage] = useState("eng");
   const [dpi, setDpi] = useState(300);
   const [outputFormat, setOutputFormat] = useState("txt");
+  
+  // Premium modal state
+  const { showModal: showUpgradeModal, setShowModal: setShowUpgradeModal, 
+          modalMsg: upgradeMessage, setModalMsg: setUpgradeMessage } = useUpgradeModal();
+  
+  // Close upgrade modal
+  const closeUpgradeModal = () => {
+    setShowUpgradeModal(false);
+  };
 
   // Handle file selection
   const handleFileChange = (e) => {
@@ -89,6 +106,15 @@ export default function ScanPDFPage() {
 
       if (!response.ok) {
         const errorData = await response.json();
+        
+        // Check for premium restriction
+        if (response.status === 403 && errorData.show_upgrade) {
+          setUpgradeMessage(errorData.error || "This feature requires a premium subscription.");
+          setShowUpgradeModal(true);
+          setIsProcessing(false);
+          return;
+        }
+        
         throw new Error(errorData.error || 'Failed to scan PDF');
       }
 
@@ -525,6 +551,31 @@ export default function ScanPDFPage() {
           </button>
         </div>
       </div>
+      
+      {showUpgradeModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center" style={{position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+          <div className="bg-white p-6 rounded-xl shadow-xl text-center max-w-sm" style={{backgroundColor: 'white', padding: '24px', borderRadius: '12px', maxWidth: '400px', position: 'relative', zIndex: 10000, margin: 'auto'}}>
+            <h2 className="text-xl font-bold mb-3" style={{fontSize: '20px', fontWeight: 'bold', marginBottom: '12px'}}>Upgrade Required</h2>
+            <p className="mb-4" style={{marginBottom: '16px'}}>{upgradeMessage}</p>
+            <div className="flex justify-center gap-4" style={{display: 'flex', justifyContent: 'center', gap: '16px'}}>
+              <button
+                onClick={() => window.location.href = "/pricing"}
+                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+                style={{backgroundColor: '#3B82F6', color: 'white', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer'}}
+              >
+                Upgrade Now
+              </button>
+              <button
+                onClick={closeUpgradeModal}
+                className="bg-gray-300 px-4 py-2 rounded-lg hover:bg-gray-400"
+                style={{backgroundColor: '#D1D5DB', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer'}}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

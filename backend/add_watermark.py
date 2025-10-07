@@ -8,8 +8,10 @@ from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.colors import Color
 from reportlab.lib.utils import ImageReader
+from restrictions import check_restrictions, check_add_watermark_restrictions
 from PyPDF2 import PdfWriter, PdfReader
 import colorsys
+from restrictions import check_add_watermark_restrictions
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -130,13 +132,23 @@ def add_watermark_to_pdf(input_pdf_path, watermark_text, opacity=0.3,
 def add_watermark():
     """Add watermark to PDF files - main function for Flask route"""
     try:
-        print("\n📋 Starting add_watermark function")
-        print("✅ No restrictions applied to watermark feature")
-
+        email = request.form.get("email", "free@example.com")
         # Get uploaded files
         files = request.files.getlist('files') or request.files.getlist('file')
         if not files or all(f.filename == '' for f in files):
             return jsonify({'error': 'No files uploaded'}), 400
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_file_paths = []
+            for file in files:
+                temp_path = os.path.join(temp_dir, file.filename)
+                file.save(temp_path)
+                temp_file_paths.append(temp_path)
+
+            # Apply premium restrictions check
+            restriction_result = check_add_watermark_restrictions(email, temp_file_paths)
+            if restriction_result:
+                return jsonify(restriction_result), 403
 
         # Get watermark settings
         watermark_text = request.form.get('watermark_text', 'CONFIDENTIAL')
@@ -164,6 +176,7 @@ def add_watermark():
 
             # Save input file temporarily to process
             with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as temp_input:
+                file.seek(0)
                 file.save(temp_input.name)
                 temp_input_path = temp_input.name
 

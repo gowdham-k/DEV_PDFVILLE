@@ -13,15 +13,8 @@ export default function UnlockPdfPage() {
   const [files, setFiles] = useState([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [dragActive, setDragActive] = useState(false);
-  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
-  const [upgradeMessage, setUpgradeMessage] = useState('');
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-
-  // Function to close the upgrade modal
-  const closeUpgradeModal = () => {
-    setShowUpgradeModal(false);
-  };
 
   const handleFileChange = (e) => {
     setFiles(Array.from(e.target.files));
@@ -58,6 +51,14 @@ export default function UnlockPdfPage() {
     setFiles([]);
   };
 
+  // Premium modal state
+  const { showModal: showUpgradeModal, setShowModal: setShowUpgradeModal, modalMsg: upgradeMessage, setModalMsg: setUpgradeMessage } = useUpgradeModal();
+  
+  // Close upgrade modal
+  const closeUpgradeModal = () => {
+    setShowUpgradeModal(false);
+  };
+
   const handleSubmit = async () => {
     if (files.length === 0) {
       alert("Please select at least 1 PDF file to unlock");
@@ -81,24 +82,18 @@ export default function UnlockPdfPage() {
         body: formData,
       });
 
-      // Check for error responses (including 403)
       if (!response.ok) {
-        const contentType = response.headers.get("content-type");
-        if (contentType && contentType.includes("application/json")) {
-          const errorData = await response.json();
-          
-          // Check if it's a restriction error with upgrade option
-          if (response.status === 403 && errorData.show_upgrade) {
-            setUpgradeMessage(errorData.error || errorData.message);
-            setShowUpgradeModal(true);
-            return;
-          }
-          
-          // Otherwise throw a generic error
-          throw new Error(errorData.error || `Server error: ${response.status}`);
-        } else {
-          throw new Error(`Server error: ${response.status}`);
+        const errorData = await response.json().catch(() => ({}));
+        
+        // Check if this is a premium restriction error
+        if (response.status === 403 && errorData.show_upgrade) {
+          setUpgradeMessage(errorData.error || "This feature requires a premium subscription");
+          setShowUpgradeModal(true);
+          setIsProcessing(false);
+          return;
         }
+        
+        throw new Error(errorData.error || `Server error: ${response.status}`);
       }
 
       // Check for warnings in response headers
@@ -116,15 +111,9 @@ export default function UnlockPdfPage() {
       window.URL.revokeObjectURL(url);
     } catch (error) {
       console.error('Error:', error);
-      
-      // Show upgrade modal for free users instead of generic error
-      setUpgradeMessage("Upgrade to premium to unlock PDF files of any size and remove password restrictions.");
-      setShowUpgradeModal(true);
-      // Don't show any error alert, just the modal
+      alert("Error: " + error.message);
     } finally {
-      if (!showUpgradeModal) {
-        setIsProcessing(false);
-      }
+      setIsProcessing(false);
     }
   };
 
@@ -540,12 +529,30 @@ export default function UnlockPdfPage() {
         </div>
       </div>
       
-      {/* Upgrade Modal */}
-      <UpgradeModalRenderer 
-        show={showUpgradeModal} 
-        msg={upgradeMessage} 
-        onClose={closeUpgradeModal} 
-      />
+      {showUpgradeModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center" style={{position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+          <div className="bg-white p-6 rounded-xl shadow-xl text-center max-w-sm" style={{backgroundColor: 'white', padding: '24px', borderRadius: '12px', maxWidth: '400px', position: 'relative', zIndex: 10000, margin: 'auto'}}>
+            <h2 className="text-xl font-bold mb-3" style={{fontSize: '20px', fontWeight: 'bold', marginBottom: '12px'}}>Upgrade Required</h2>
+            <p className="mb-4" style={{marginBottom: '16px'}}>{upgradeMessage}</p>
+            <div className="flex justify-center gap-4" style={{display: 'flex', justifyContent: 'center', gap: '16px'}}>
+              <button
+                onClick={() => window.location.href = "/pricing"}
+                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+                style={{backgroundColor: '#3B82F6', color: 'white', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer'}}
+              >
+                Upgrade Now
+              </button>
+              <button
+                onClick={closeUpgradeModal}
+                className="bg-gray-300 px-4 py-2 rounded-lg hover:bg-gray-400"
+                style={{backgroundColor: '#D1D5DB', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer'}}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

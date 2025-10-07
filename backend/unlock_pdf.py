@@ -5,7 +5,7 @@ import zipfile
 from io import BytesIO
 import logging
 from PyPDF2 import PdfWriter, PdfReader
-from restrictions import check_unlock_pdf_restrictions
+from restrictions import check_restrictions, check_unlock_pdf_restrictions
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -75,9 +75,6 @@ def unlock_pdf_file(input_pdf_path, password=None):
 def unlock_pdf():
     """Unlock password-protected PDF files - main function for Flask route"""
     try:
-        # Get email from form data (default free user for demo)
-        email = request.form.get("email", "free@example.com")
-        
         # Check if files were uploaded
         if 'files' not in request.files:
             return jsonify({'error': 'No files uploaded'}), 400
@@ -85,6 +82,41 @@ def unlock_pdf():
         files = request.files.getlist('files')
         if not files or all(f.filename == '' for f in files):
             return jsonify({'error': 'No files selected'}), 400
+            
+        # Get email from form (default free user for demo)
+        email = request.form.get("email", "free@example.com")
+        
+        # Save uploaded files temporarily to check restrictions
+        temp_paths = []
+        for file in files:
+            if file.filename.lower().endswith('.pdf'):
+                temp_fd, temp_path = tempfile.mkstemp(suffix='.pdf')
+                os.close(temp_fd)
+                file.save(temp_path)
+                temp_paths.append(temp_path)
+                file.seek(0)  # Reset file pointer for later use
+        
+        # Apply general restrictions check
+        restriction = check_restrictions(email, temp_paths)
+        if restriction:
+            # Clean up temp files
+            for path in temp_paths:
+                try:
+                    os.remove(path)
+                except:
+                    pass
+            return jsonify({"error": restriction}), 403
+            
+        # Apply premium-only feature check
+        premium_restriction = check_unlock_pdf_restrictions(email, temp_paths)
+        if premium_restriction:
+            # Clean up temp files
+            for path in temp_paths:
+                try:
+                    os.remove(path)
+                except:
+                    pass
+            return jsonify(premium_restriction), 403
         
         # Get password from form data
         password = request.form.get('password', '').strip()
@@ -106,18 +138,6 @@ def unlock_pdf():
         
         # Create temporary directory
         with tempfile.TemporaryDirectory() as temp_dir:
-            # Save all files temporarily for restriction check
-            temp_file_paths = []
-            for i, file in enumerate(pdf_files):
-                temp_input_path = os.path.join(temp_dir, f"input_{i}_{file.filename}")
-                file.save(temp_input_path)
-                temp_file_paths.append(temp_input_path)
-            
-            # Apply premium restrictions check
-            restriction_result = check_unlock_pdf_restrictions(email, temp_file_paths)
-            if restriction_result:
-                return jsonify(restriction_result), 403
-            
             processed_files = []
             failed_files = []
             
@@ -125,7 +145,9 @@ def unlock_pdf():
             for i, file in enumerate(pdf_files):
                 logger.info(f"Processing file {i+1}/{len(pdf_files)}: {file.filename}")
                 
-                temp_input_path = temp_file_paths[i]
+                # Save uploaded file temporarily
+                temp_input_path = os.path.join(temp_dir, f"input_{i}_{file.filename}")
+                file.save(temp_input_path)
                 
                 try:
                     # Unlock PDF

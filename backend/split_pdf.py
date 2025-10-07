@@ -22,6 +22,26 @@ def split_pdf():
         file_path = os.path.join(temp_dir, uploaded_file.filename)
         uploaded_file.save(file_path)
 
+        # Check restrictions specific to split_pdf
+        email = request.form.get("email")
+        restriction = check_split_pdf_restrictions(email, [file_path])
+        if restriction:
+            # Clean up temp files
+            if os.path.exists(file_path):
+                os.remove(file_path)
+            if os.path.exists(temp_dir):
+                os.rmdir(temp_dir)
+            # Handle new error format with upgrade button
+            if isinstance(restriction, dict):
+                return jsonify(restriction), 403
+            else:
+                # Backward compatibility for string errors
+                return jsonify({"error": restriction}), 403
+                
+        # Get user status for premium features
+        user = get_user(email)
+        is_premium = user["is_premium_"]
+        
         # Read PDF to determine pages and validate ranges
         reader = PdfReader(file_path)
         total_pages = len(reader.pages)
