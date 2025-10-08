@@ -3,14 +3,10 @@ import { useRouter } from "next/router";
 import { PDFDocument } from 'pdf-lib';
 import { API_BASE_URL } from "../components/config";
 import Head from "next/head";
-import UpgradeModal from "../components/UpgradeModal";
+import { useUpgrade } from "../context/UpgradeContext";
 
-// --- Premium modal handling ---
-function useUpgradeModal() {
-  const [showModal, setShowModal] = useState(false);
-  const [modalMsg, setModalMsg] = useState("");
-  return { showModal, setShowModal, modalMsg, setModalMsg };
-}
+
+// Using global upgrade context
 
 export default function EditPDFPage() {
   const router = useRouter();
@@ -23,13 +19,8 @@ export default function EditPDFPage() {
   const [operations, setOperations] = useState([]);
   const [pdfLoaded, setPdfLoaded] = useState(false);
   
-  // Premium modal state
-  const { showModal: showUpgradeModal, setShowModal: setShowUpgradeModal, modalMsg: upgradeMessage, setModalMsg: setUpgradeMessage } = useUpgradeModal();
-  
-  // Close upgrade modal
-  const closeUpgradeModal = () => {
-    setShowUpgradeModal(false);
-  };
+  // Using global upgrade context
+  const { showUpgradeModal, setShowUpgradeModal, setUpgradeMessage } = useUpgrade();
   
   // Load PDF.js library
   useEffect(() => {
