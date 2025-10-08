@@ -16,6 +16,7 @@ export default function RotatePagesPage() {
   const [pagesToRotate, setPagesToRotate] = useState("");
   const [rotationAngle, setRotationAngle] = useState("90");
   const [rotationType, setRotationType] = useState("specific");
+  const { showModal, setShowModal, modalMsg, setModalMsg } = useUpgradeModal();
 
   const handleFileChange = (e) => {
     setFiles(Array.from(e.target.files));
@@ -85,6 +86,10 @@ export default function RotatePagesPage() {
       formData.append("pages_to_rotate", rotationType === "all" ? "all" : pagesToRotate);
       formData.append("rotation_angle", rotationAngle);
       formData.append("rotation_type", rotationType);
+      
+      // Add email for restriction checking
+      const userEmail = localStorage.getItem("userEmail") || "";
+      formData.append("email", userEmail);
 
       const response = await fetch(`${API_BASE_URL}/api/pdf-rotate-pages`, {
         method: "POST",
@@ -93,6 +98,15 @@ export default function RotatePagesPage() {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
+        
+        // Handle restriction errors
+        if (response.status === 403 && errorData.show_upgrade) {
+          setModalMsg(errorData.error || "This feature has restrictions in the free version. Please upgrade to premium.");
+          setShowModal(true);
+          setIsProcessing(false);
+          return;
+        }
+        
         throw new Error(errorData.error || `Server error: ${response.status}`);
       }
 
@@ -570,6 +584,12 @@ export default function RotatePagesPage() {
           </div>
         </div>
       </div>
+      {/* Add UpgradeModal for restriction handling */}
+      <UpgradeModal 
+        show={showModal} 
+        onClose={() => setShowModal(false)} 
+        message={modalMsg} 
+      />
     </div>
   );
 }

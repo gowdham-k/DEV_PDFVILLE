@@ -5,6 +5,7 @@ import zipfile
 from io import BytesIO
 from flask import request, jsonify, send_file
 import re
+from restrictions import check_restrictions, get_user
 
 def parse_page_ranges(page_ranges, total_pages):
     """
@@ -96,6 +97,9 @@ def rotate_pdf_pages():
         files = request.files.getlist('files')
         if not files or all(file.filename == '' for file in files):
             return jsonify({'error': 'No files selected'}), 400
+            
+        # Get user email for restriction checking
+        email = request.form.get('email', '')
         
         # Get rotation parameters
         pages_to_rotate = request.form.get('pages_to_rotate', '').strip()
@@ -120,6 +124,23 @@ def rotate_pdf_pages():
         
         # Create temporary directory for processing
         with tempfile.TemporaryDirectory() as temp_dir:
+            # Save files temporarily for restriction checking
+            temp_file_paths = []
+            for file_index, file in enumerate(files):
+                if not file.filename.lower().endswith('.pdf'):
+                    continue
+                temp_path = os.path.join(temp_dir, f"temp_{file_index}_{file.filename}")
+                file.save(temp_path)
+                temp_file_paths.append(temp_path)
+            
+            # Check restrictions
+            restriction_error = check_restrictions(email, temp_file_paths)
+            if restriction_error:
+                if isinstance(restriction_error, dict):
+                    return jsonify(restriction_error), 403
+                else:
+                    return jsonify({"error": restriction_error, "show_upgrade": True}), 403
+            
             processed_files = []
             
             for file_index, file in enumerate(files):
