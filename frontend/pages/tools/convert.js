@@ -3,10 +3,12 @@ import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { API_BASE_URL } from "../../components/config";
 import { useRouter } from "next/navigation";
+import { useUpgrade } from "../../context/UpgradeContext";
 
 export default function ConvertPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const { showUpgradeModal, setUpgradeMessage } = useUpgrade();
 
   // State declarations
   const [outputFormat, setOutputFormat] = useState("");
@@ -14,8 +16,6 @@ export default function ConvertPage() {
   const [dragActive, setDragActive] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [formatFromUrl, setFormatFromUrl] = useState(false);
-  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
-  const [upgradeMessage, setUpgradeMessage] = useState("");
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState(null);
 

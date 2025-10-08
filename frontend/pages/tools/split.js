@@ -1,33 +1,22 @@
 "use client";
 
-// --- Premium modal handling injected ---
-function useUpgradeModal() {
-  const [showModal, setShowModal] = useState(false);
-  const [modalMsg, setModalMsg] = useState("");
-  return { showModal, setShowModal, modalMsg, setModalMsg };
-}
-
 import { useState } from 'react';
-import UpgradeModal from '../../components/UpgradeModal';
 import { API_BASE_URL } from '../../components/config';
+import { useUpgrade } from '../../context/UpgradeContext';
 
 export default function SplitPage() {
   const [file, setFile] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [dragActive, setDragActive] = useState(false);
-  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
-  const [upgradeMessage, setUpgradeMessage] = useState('');
   const [splitOptions, setSplitOptions] = useState({
     mode: 'all',
     startPage: '',
     endPage: '',
     customPages: ''
   });
-
-  // Function to close the upgrade modal
-  const closeUpgradeModal = () => {
-    setShowUpgradeModal(false);
-  };
+  
+  // Use global upgrade context
+  const { setUpgradeMessage } = useUpgrade();
 
   const handleFileChange = (e) => {
     if (e.target.files.length > 0) {
@@ -118,12 +107,9 @@ export default function SplitPage() {
       
       // Show upgrade modal for free users instead of generic error
       setUpgradeMessage("Upgrade to premium to split PDF files of any size with unlimited page operations.");
-      setShowUpgradeModal(true);
       // Don't show any error alert, just the modal
     } finally {
-      if (!showUpgradeModal) {
-        setIsProcessing(false);
-      }
+      setIsProcessing(false);
     }
   };
 
@@ -636,31 +622,7 @@ export default function SplitPage() {
           </div>
         </div>
         
-        {/* Upgrade Modal - Inline implementation */}
-        {showUpgradeModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center" style={{position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
-            <div className="bg-white p-6 rounded-xl shadow-xl text-center max-w-sm" style={{backgroundColor: 'white', padding: '24px', borderRadius: '12px', maxWidth: '400px', position: 'relative', zIndex: 10000, margin: 'auto'}}>
-              <h2 className="text-xl font-bold mb-3" style={{fontSize: '20px', fontWeight: 'bold', marginBottom: '12px'}}>Upgrade Required</h2>
-              <p className="mb-4" style={{marginBottom: '16px'}}>{upgradeMessage}</p>
-              <div className="flex justify-center gap-4" style={{display: 'flex', justifyContent: 'center', gap: '16px'}}>
-                <button
-                  onClick={() => window.location.href = "/pricing"}
-                  className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
-                  style={{backgroundColor: '#3B82F6', color: 'white', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer'}}
-                >
-                  Upgrade Now
-                </button>
-                <button
-                  onClick={closeUpgradeModal}
-                  className="bg-gray-300 px-4 py-2 rounded-lg hover:bg-gray-400"
-                  style={{backgroundColor: '#D1D5DB', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer'}}
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
+        {/* Upgrade Modal is now handled by the global context */}
       </div>
     </>
   );

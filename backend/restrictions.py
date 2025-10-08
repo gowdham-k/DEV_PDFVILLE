@@ -63,6 +63,35 @@ def check_restrictions(email, file_paths):
 
     return None
 
+def check_edit_pdf_restrictions(email, file_paths, operations=None):
+    """
+    Check restrictions specific to the edit_pdf feature.
+    Free users can only add text annotations.
+    
+    Args:
+        email: User's email
+        file_paths: List of file paths to check
+        operations: List of edit operations to perform
+        
+    Returns:
+        Error message if restrictions are violated, None otherwise
+    """
+    user = get_user(email)
+    
+    # Premium users have no restrictions
+    if user["is_premium_"]:
+        return None
+    
+    # Free user restrictions for edit_pdf
+    if operations:
+        for operation in operations:
+            op_type = operation.get('type')
+            # Free users can only add text
+            if op_type and op_type != 'add_text':
+                return {"error": "Free users can only add text annotations. Upgrade to premium for shapes, images, and page operations.", "show_upgrade": True}
+    
+    return None
+
 def check_compress_pdf_restrictions(email, file_paths, compression_level="medium"):
     """
     Check restrictions specific to the compress_pdf feature.

@@ -3,6 +3,14 @@ import { useRouter } from "next/router";
 import { PDFDocument } from 'pdf-lib';
 import { API_BASE_URL } from "../components/config";
 import Head from "next/head";
+import UpgradeModal from "../components/UpgradeModal";
+
+// --- Premium modal handling ---
+function useUpgradeModal() {
+  const [showModal, setShowModal] = useState(false);
+  const [modalMsg, setModalMsg] = useState("");
+  return { showModal, setShowModal, modalMsg, setModalMsg };
+}
 
 export default function EditPDFPage() {
   const router = useRouter();
@@ -14,6 +22,14 @@ export default function EditPDFPage() {
   const [currentTool, setCurrentTool] = useState("text");
   const [operations, setOperations] = useState([]);
   const [pdfLoaded, setPdfLoaded] = useState(false);
+  
+  // Premium modal state
+  const { showModal: showUpgradeModal, setShowModal: setShowUpgradeModal, modalMsg: upgradeMessage, setModalMsg: setUpgradeMessage } = useUpgradeModal();
+  
+  // Close upgrade modal
+  const closeUpgradeModal = () => {
+    setShowUpgradeModal(false);
+  };
   
   // Load PDF.js library
   useEffect(() => {
@@ -291,19 +307,33 @@ export default function EditPDFPage() {
     try {
       const formData = new FormData();
       files.forEach((file, index) => {
-        formData.append('files', file);
+        formData.append('file', file);
       });
       formData.append('operations', JSON.stringify(operations));
       
-      const response = await fetch(`${API_BASE_URL}/api/edit-pdf`, {
+      // Add user email for restriction checking
+      const userEmail = localStorage.getItem('userEmail') || 'guest@example.com';
+      formData.append('email', userEmail);
+      
+      const response = await fetch(`${API_BASE_URL}/api/edit_pdf`, {
         method: "POST",
-        body: formData,
-        credentials: "include"
+        body: formData
       });
       
       console.log("Edit response status:", response.status);
 
       if (!response.ok) {
+        // Check if it's a restriction error (403)
+        if (response.status === 403) {
+          const errorData = await response.json();
+          if (errorData.show_upgrade) {
+            setUpgradeMessage(errorData.error || "Free users can only add text annotations. Upgrade to premium for shapes, images, and page operations.");
+            setShowUpgradeModal(true);
+            setIsProcessing(false);
+            return;
+          }
+        }
+        
         console.error(`Edit request failed with status: ${response.status}`);
         throw new Error(`Server error: ${response.status}`);
       }
@@ -688,6 +718,14 @@ export default function EditPDFPage() {
         .tool-button:hover { background: #f0f0f0; }
         .active-tool:hover { background: #555555; }
       `}</style>
+
+      {/* Upgrade Modal */}
+      {showUpgradeModal && (
+        <UpgradeModal 
+          message={upgradeMessage}
+          onClose={closeUpgradeModal}
+        />
+      )}
 
       <div style={styles.maxWidth}>
         {errorMessage && (

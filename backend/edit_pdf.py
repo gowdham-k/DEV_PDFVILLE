@@ -13,83 +13,77 @@ import io
 from PIL import Image
 import fitz  # PyMuPDF for better PDF handling
 
+from flask import Blueprint, request, jsonify, send_file
+import os
+import json
+import fitz  # PyMuPDF
+import tempfile
+from werkzeug.utils import secure_filename
+from utils import get_upload_folder, get_temp_folder, allowed_file, get_file_extension
+import uuid
+from restrictions import check_edit_pdf_restrictions
+
+edit_pdf_bp = Blueprint('edit_pdf', __name__)
+
+@edit_pdf_bp.route('/api/edit_pdf', methods=['POST'])
 def edit_pdf():
     """
-    Edit PDF with various operations:
-    - Add text at specific positions
-    - Add shapes (rectangles, circles)
-    - Add images
-    - Delete pages
-    - Reorder pages
-    - Rotate pages
+    Edit PDF with various operations (add text, shapes, images, delete/rotate/reorder pages)
     """
     try:
-        print("\n🔧 PDF Edit endpoint accessed")
+        # Check if file was uploaded
+        if 'file' not in request.files:
+            return jsonify({"error": "No file uploaded"}), 400
+            
+        file = request.files['file']
         
-        if 'files' not in request.files:
-            return jsonify({'error': 'No PDF files provided'}), 400
+        if file.filename == '':
+            return jsonify({"error": "No file selected"}), 400
+            
+        if not file or not allowed_file(file.filename, ['pdf']):
+            return jsonify({"error": "Invalid file format. Only PDF files are allowed."}), 400
         
-        files = request.files.getlist('files')
-        if not files or not files[0].filename:
-            return jsonify({'error': 'No PDF files selected'}), 400
-        
-        # Get edit operations from form data
-        operations = []
-        
-        # Parse operations from JSON string if provided
-        import json
+        # Get operations from request
         operations_json = request.form.get('operations', '[]')
-        try:
-            operations = json.loads(operations_json)
-        except json.JSONDecodeError:
-            operations = []
+        operations = json.loads(operations_json)
         
-        print(f"📝 Processing {len(files)} PDF files with {len(operations)} operations")
+        # Get user email from request
+        email = request.form.get('email', '')
         
-        temp_dir = tempfile.mkdtemp()
-        processed_files = []
+        # Check restrictions for edit PDF
+        restriction_check = check_edit_pdf_restrictions(email, [], operations)
+        if restriction_check:
+            return jsonify(restriction_check), 403
         
-        for file_idx, file in enumerate(files):
-            if not file.filename.lower().endswith('.pdf'):
-                continue
-                
-            print(f"🔧 Processing file: {file.filename}")
-            
-            # Save uploaded file temporarily
-            temp_input = os.path.join(temp_dir, f"input_{file_idx}.pdf")
-            file.save(temp_input)
-            
-            # Process the PDF
-            output_filename = f"edited_{file.filename}"
-            temp_output = os.path.join(temp_dir, output_filename)
-            
-            success = process_pdf_edits(temp_input, temp_output, operations)
-            
-            if success and os.path.exists(temp_output):
-                processed_files.append((temp_output, output_filename))
-                print(f"✅ Successfully processed: {file.filename}")
-            else:
-                print(f"❌ Failed to process: {file.filename}")
+        # Save uploaded file
+        filename = secure_filename(file.filename)
+        upload_folder = get_upload_folder()
+        temp_folder = get_temp_folder()
         
-        if not processed_files:
-            return jsonify({'error': 'No files could be processed'}), 400
+        # Create a unique filename to avoid conflicts
+        unique_id = str(uuid.uuid4())
+        input_path = os.path.join(upload_folder, f"{unique_id}_{filename}")
+        output_filename = f"edited_{unique_id}_{filename}"
+        output_path = os.path.join(temp_folder, output_filename)
         
-        # Return single file or zip
-        if len(processed_files) == 1:
-            temp_output, output_filename = processed_files[0]
-            return send_file(temp_output, as_attachment=True, download_name=output_filename, mimetype='application/pdf')
-        else:
-            # Create zip file for multiple files
-            zip_path = os.path.join(temp_dir, 'edited_pdfs.zip')
-            with zipfile.ZipFile(zip_path, 'w') as zip_file:
-                for temp_output, output_filename in processed_files:
-                    zip_file.write(temp_output, output_filename)
-            
-            return send_file(zip_path, as_attachment=True, download_name='edited_pdfs.zip', mimetype='application/zip')
-    
+        file.save(input_path)
+        
+        # Process the PDF with the requested operations
+        success = process_pdf_edits(input_path, output_path, operations)
+        
+        if not success:
+            return jsonify({"error": "Failed to process PDF edits"}), 500
+        
+        # Return the edited PDF file
+        return send_file(
+            output_path,
+            as_attachment=True,
+            download_name=f"edited_{filename}",
+            mimetype='application/pdf'
+        )
+        
     except Exception as e:
-        print(f"❌ Edit PDF error: {str(e)}")
-        return jsonify({'error': f'Failed to edit PDF: {str(e)}'}), 500
+        return jsonify({"error": str(e)}), 500
 
 def process_pdf_edits(input_path, output_path, operations):
     """Process PDF with edit operations"""
