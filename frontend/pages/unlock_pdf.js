@@ -1,13 +1,8 @@
 import { useState } from "react";
-import UpgradeModal from "../components/UpgradeModal";
 import { API_BASE_URL } from "../components/config";
+import { useUpgrade } from "../context/UpgradeContext";
 
-// --- Premium modal handling injected ---
-function useUpgradeModal() {
-  const [showModal, setShowModal] = useState(false);
-  const [modalMsg, setModalMsg] = useState("");
-  return { showModal, setShowModal, modalMsg, setModalMsg };
-}
+// Using global upgrade context
 
 export default function UnlockPdfPage() {
   const [files, setFiles] = useState([]);
@@ -52,12 +47,7 @@ export default function UnlockPdfPage() {
   };
 
   // Premium modal state
-  const { showModal: showUpgradeModal, setShowModal: setShowUpgradeModal, modalMsg: upgradeMessage, setModalMsg: setUpgradeMessage } = useUpgradeModal();
-  
-  // Close upgrade modal
-  const closeUpgradeModal = () => {
-    setShowUpgradeModal(false);
-  };
+  const { showUpgradeModal, setShowUpgradeModal, setUpgradeMessage } = useUpgrade();
 
   const handleSubmit = async () => {
     if (files.length === 0) {
@@ -557,8 +547,4 @@ export default function UnlockPdfPage() {
   );
 }
 
-// /* UPGRADE MODAL RENDER */
-export function UpgradeModalRenderer({ show, msg, onClose }) {
-  if (!show) return null;
-  return <UpgradeModal message={msg} onClose={onClose} />;
-}
+// Upgrade modal is now handled by the global context

@@ -1,13 +1,8 @@
-import { useState } from "react";
-import UpgradeModal from "../components/UpgradeModal";
+import { useState, useEffect } from "react";
 import { API_BASE_URL } from "../components/config";
+import { useUpgrade } from "../context/UpgradeContext";
 
-// --- Premium modal handling injected ---
-function useUpgradeModal() {
-  const [showModal, setShowModal] = useState(false);
-  const [modalMsg, setModalMsg] = useState("");
-  return { showModal, setShowModal, modalMsg, setModalMsg };
-}
+// Using global upgrade context
 
 export default function RemovePagesPage() {
   const [files, setFiles] = useState([]);

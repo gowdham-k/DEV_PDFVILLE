@@ -1,13 +1,8 @@
 import { useState } from "react";
-import UpgradeModal from "../components/UpgradeModal";
 import { API_BASE_URL } from "../components/config";
+import { useUpgrade } from "../context/UpgradeContext";
 
-// --- Premium modal handling injected ---
-function useUpgradeModal() {
-  const [showModal, setShowModal] = useState(false);
-  const [modalMsg, setModalMsg] = useState("");
-  return { showModal, setShowModal, modalMsg, setModalMsg };
-}
+// Using global upgrade context
 
 // Define keyframes for spinner animation
 const spinKeyframes = `
@@ -24,7 +19,7 @@ export default function RepairPDFPage() {
   const [repairMode, setRepairMode] = useState("auto");
   const [preserveBookmarks, setPreserveBookmarks] = useState(true);
   const [preserveMetadata, setPreserveMetadata] = useState(true);
-  const { showModal, setShowModal, modalMsg, setModalMsg } = useUpgradeModal();
+  const { showUpgradeModal: showModal, setShowUpgradeModal: setShowModal, setUpgradeMessage: setModalMsg } = useUpgrade();
 
   const handleFileChange = (e) => {
     const selectedFiles = Array.from(e.target.files).filter(
