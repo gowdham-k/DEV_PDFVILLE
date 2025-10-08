@@ -1,65 +1,94 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useRouter } from "next/router";
 import { API_BASE_URL } from "../components/config";
 import HubspotTracking, { trackEvent } from "../components/HubspotTracking";
 import Head from "next/head";
+import dynamic from "next/dynamic";
 import { useUpgrade } from "../context/UpgradeContext";
 
-// --- Premium modal handling injected ---
-function useUpgradeModal() {
-  const [showModal, setShowModal] = useState(false);
-  const [modalMsg, setModalMsg] = useState("");
-  return { showModal, setShowModal, modalMsg, setModalMsg };
-}
+// Dynamic imports for better code splitting
+const FileUploadArea = dynamic(() => import("../components/FileUploadArea"), {
+  loading: () => <div>Loading file upload component...</div>,
+  ssr: false
+});
 
+const WatermarkSettings = dynamic(() => import("../components/WatermarkSettings"), {
+  loading: () => <div>Loading watermark settings...</div>
+});
+
+// Constants for default values and configuration
+const DEFAULT_SETTINGS = {
+  text: "CONFIDENTIAL",
+  opacity: 0.3,
+  position: "center",
+  rotation: 45,
+  color: "#FF0000",
+  fontSize: 48
+};
+
+const ERROR_TIMEOUT = 5000;
+
+/**
+ * PDF Watermark Page Component
+ * Allows users to add text watermarks to PDF documents
+ */
 export default function WatermarkPage() {
   const router = useRouter();
+  
+  // File state
   const [files, setFiles] = useState([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [dragActive, setDragActive] = useState(false);
-  const [watermarkText, setWatermarkText] = useState("CONFIDENTIAL");
-  const [watermarkOpacity, setWatermarkOpacity] = useState(0.3);
-  const [watermarkPosition, setWatermarkPosition] = useState("center");
-  const [watermarkRotation, setWatermarkRotation] = useState(45);
-  const [watermarkColor, setWatermarkColor] = useState("#FF0000");
-  const [fontSize, setFontSize] = useState(48);
+  
+  // Watermark settings state
+  const [watermarkSettings, setWatermarkSettings] = useState({
+    text: DEFAULT_SETTINGS.text,
+    opacity: DEFAULT_SETTINGS.opacity,
+    position: DEFAULT_SETTINGS.position,
+    rotation: DEFAULT_SETTINGS.rotation,
+    color: DEFAULT_SETTINGS.color,
+    fontSize: DEFAULT_SETTINGS.fontSize
+  });
+  
+  // Error handling
   const [errorMessage, setErrorMessage] = useState("");
   
   // Use global upgrade context
   const { showUpgradeModal, setShowUpgradeModal, upgradeMessage, setUpgradeMessage } = useUpgrade();
-  
-  // Close upgrade modal
-  const closeUpgradeModal = () => {
-    setShowUpgradeModal(false);
-  };
 
-  // Authentication check removed - feature now available without login
-
-  // Clear error message after 5 seconds
+  // Clear error message after timeout
   useEffect(() => {
-    if (errorMessage) {
-      const timer = setTimeout(() => {
-        setErrorMessage("");
-      }, 5000);
-      return () => clearTimeout(timer);
-    }
+    if (!errorMessage) return;
+    
+    const timer = setTimeout(() => {
+      setErrorMessage("");
+    }, ERROR_TIMEOUT);
+    
+    return () => clearTimeout(timer);
   }, [errorMessage]);
 
-  const handleFileChange = (e) => {
-    setFiles(Array.from(e.target.files));
-  };
+  // Memoized derived values
+  const isFormValid = useMemo(() => 
+    files.length > 0 && watermarkSettings.text.trim().length > 0,
+  [files.length, watermarkSettings.text]);
 
-  const handleDrag = (e) => {
+  // Event handlers with useCallback for better performance
+  const handleFileChange = useCallback((e) => {
+    setFiles(Array.from(e.target.files));
+  }, []);
+
+  const handleDrag = useCallback((e) => {
     e.preventDefault();
     e.stopPropagation();
+    
     if (e.type === "dragenter" || e.type === "dragover") {
       setDragActive(true);
     } else if (e.type === "dragleave") {
       setDragActive(false);
     }
-  };
+  }, []);
 
-  const handleDrop = (e) => {
+  const handleDrop = useCallback((e) => {
     e.preventDefault();
     e.stopPropagation();
     setDragActive(false);
@@ -67,27 +96,42 @@ export default function WatermarkPage() {
     const droppedFiles = Array.from(e.dataTransfer.files).filter(
       file => file.type === 'application/pdf'
     );
+    
     if (droppedFiles.length > 0) {
       setFiles(prev => [...prev, ...droppedFiles]);
     }
-  };
+  }, []);
 
-  const removeFile = (index) => {
-    setFiles(files.filter((_, i) => i !== index));
-  };
+  const removeFile = useCallback((index) => {
+    setFiles(files => files.filter((_, i) => i !== index));
+  }, []);
 
-  const removeAllFiles = () => {
+  const removeAllFiles = useCallback(() => {
     setFiles([]);
-  };
+  }, []);
 
-  const handleSubmit = async () => {
+  // Update watermark settings with a single function
+  const updateWatermarkSetting = useCallback((key, value) => {
+    setWatermarkSettings(prev => ({
+      ...prev,
+      [key]: value
+    }));
+  }, []);
+
+  const goBack = useCallback(() => {
+    router.push("/");
+  }, [router]);
+
+  // Process the watermark request
+  const handleSubmit = useCallback(async () => {
+    // Validation
     if (files.length === 0) {
-      alert("Please select at least 1 PDF file to add watermark");
+      setErrorMessage("Please select at least 1 PDF file to add watermark");
       return;
     }
 
-    if (!watermarkText.trim()) {
-      alert("Please enter watermark text");
+    if (!watermarkSettings.text.trim()) {
+      setErrorMessage("Please enter watermark text");
       return;
     }
 
@@ -95,45 +139,40 @@ export default function WatermarkPage() {
 
     try {
       const formData = new FormData();
+      
+      // Add files to form data
       files.forEach(file => {
         formData.append("files", file);
       });
       
-      // Add watermark settings
-      formData.append("watermark_text", watermarkText);
-      formData.append("opacity", watermarkOpacity.toString());
-      formData.append("position", watermarkPosition);
-      formData.append("rotation", watermarkRotation.toString());
-      formData.append("color", watermarkColor);
-      formData.append("font_size", fontSize.toString());
-
-      console.log("Sending watermark request to:", `${API_BASE_URL}/pdf-add-watermark`);
-      console.log("No authentication required for watermark feature");
+      // Add watermark settings to form data
+      formData.append("watermark_text", watermarkSettings.text);
+      formData.append("opacity", watermarkSettings.opacity.toString());
+      formData.append("position", watermarkSettings.position);
+      formData.append("rotation", watermarkSettings.rotation.toString());
+      formData.append("color", watermarkSettings.color);
+      formData.append("font_size", watermarkSettings.fontSize.toString());
       
       const response = await fetch(`${API_BASE_URL}/api/pdf-add-watermark`, {
         method: "POST",
         body: formData,
         credentials: "include"
       });
-      
-      console.log("Watermark response status:", response.status);
-      console.log("Watermark response OK:", response.ok);
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         
-        // Check if this is a premium restriction error
+        // Handle premium restriction error
         if (response.status === 403 && errorData.show_upgrade) {
           setUpgradeMessage(errorData.error || "This feature requires a premium subscription");
           setShowUpgradeModal(true);
-          setIsProcessing(false);
           return;
         }
         
-        console.error(`Watermark request failed with status: ${response.status}`);
         throw new Error(errorData.error || `Server error: ${response.status}`);
       }
 
+      // Process successful response
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -142,10 +181,9 @@ export default function WatermarkPage() {
       a.click();
       window.URL.revokeObjectURL(url);
     } catch (error) {
-      console.error('Error:', error);
-      console.log("Watermark process failed:", error);
+      console.error('Error processing watermark:', error);
       
-      // More descriptive error message
+      // Set user-friendly error message
       if (error.message.includes("Failed to fetch") || error.message.includes("NetworkError")) {
         setErrorMessage("Connection error: Unable to reach the server. Please check your internet connection and try again.");
       } else {
@@ -154,11 +192,7 @@ export default function WatermarkPage() {
     } finally {
       setIsProcessing(false);
     }
-  };
-
-  const goBack = () => {
-    window.location.href = "/";
-  };
+  }, [files, watermarkSettings, setUpgradeMessage, setShowUpgradeModal]);
 
   const styles = {
     container: {
@@ -492,58 +526,15 @@ export default function WatermarkPage() {
               Select PDF Files
             </h2>
             
-            <div
-              style={styles.dropZone}
-              onDragEnter={handleDrag}
-              onDragLeave={handleDrag}
-              onDragOver={handleDrag}
-              onDrop={handleDrop}
-            >
-              <input
-                type="file"
-                multiple
-                accept=".pdf"
-                onChange={handleFileChange}
-                style={styles.fileInput}
-              />
-              
-              <div style={styles.uploadIcon}>
-                {files.length > 0 ? '📄' : '📁'}
-              </div>
-              
-              <p style={styles.uploadText}>
-                {files.length > 0 ? `${files.length} files selected` : 'Drop PDF files here or click to browse'}
-              </p>
-              <p style={styles.uploadSubtext}>
-                Select PDF files to add watermark
-              </p>
-            </div>
-
-            {files.length > 0 && (
-              <div style={styles.filesList}>
-                <div style={{ textAlign: 'center', marginBottom: '16px' }}>
-                  <button onClick={removeAllFiles} style={styles.removeAllButton}>
-                    🗑️ Remove All Files
-                  </button>
-                </div>
-                
-                {files.map((file, index) => (
-                  <div key={file.name + index} className="file-item" style={styles.fileItem}>
-                    <span style={styles.fileIcon}>📄</span>
-                    <span style={styles.fileName}>
-                      {index + 1}. {file.name}
-                    </span>
-                    <button
-                      onClick={() => removeFile(index)}
-                      style={styles.removeButton}
-                      title="Remove file"
-                    >
-                      ×
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
+            <FileUploadArea 
+              files={files}
+              setFiles={setFiles}
+              acceptTypes=".pdf"
+              uploadText="Drop PDF files here or click to browse"
+              uploadSubtext="Select PDF files to add watermark"
+              onRemoveFile={removeFile}
+              onRemoveAllFiles={removeAllFiles}
+            />
           </div>
 
           <div style={styles.section}>
@@ -552,98 +543,25 @@ export default function WatermarkPage() {
               Watermark Settings
             </h2>
 
-            <div style={styles.watermarkSettings}>
-              <div style={styles.settingGroup}>
-                <label style={styles.settingLabel}>Watermark Text</label>
-                <input
-                  type="text"
-                  value={watermarkText}
-                  onChange={(e) => setWatermarkText(e.target.value)}
-                  placeholder="Enter watermark text"
-                  style={styles.input}
-                />
-              </div>
-
-              <div style={styles.settingGroup}>
-                <label style={styles.settingLabel}>Position</label>
-                <select
-                  value={watermarkPosition}
-                  onChange={(e) => setWatermarkPosition(e.target.value)}
-                  style={styles.select}
-                >
-                  <option value="center">Center</option>
-                  <option value="top-left">Top Left</option>
-                  <option value="top-right">Top Right</option>
-                  <option value="bottom-left">Bottom Left</option>
-                  <option value="bottom-right">Bottom Right</option>
-                </select>
-              </div>
-
-              <div style={styles.settingGroup}>
-                <label style={styles.settingLabel}>Opacity: {Math.round(watermarkOpacity * 100)}%</label>
-                <div style={styles.rangeContainer}>
-                  <input
-                    type="range"
-                    min="0.1"
-                    max="1"
-                    step="0.1"
-                    value={watermarkOpacity}
-                    onChange={(e) => setWatermarkOpacity(parseFloat(e.target.value))}
-                    style={styles.rangeInput}
-                  />
-                  <div style={styles.rangeValue}>{Math.round(watermarkOpacity * 100)}%</div>
-                </div>
-              </div>
-
-              <div style={styles.settingGroup}>
-                <label style={styles.settingLabel}>Rotation: {watermarkRotation}°</label>
-                <div style={styles.rangeContainer}>
-                  <input
-                    type="range"
-                    min="0"
-                    max="360"
-                    step="15"
-                    value={watermarkRotation}
-                    onChange={(e) => setWatermarkRotation(parseInt(e.target.value))}
-                    style={styles.rangeInput}
-                  />
-                  <div style={styles.rangeValue}>{watermarkRotation}°</div>
-                </div>
-              </div>
-
-              <div style={styles.settingGroup}>
-                <label style={styles.settingLabel}>Font Size: {fontSize}px</label>
-                <div style={styles.rangeContainer}>
-                  <input
-                    type="range"
-                    min="12"
-                    max="120"
-                    step="6"
-                    value={fontSize}
-                    onChange={(e) => setFontSize(parseInt(e.target.value))}
-                    style={styles.rangeInput}
-                  />
-                  <div style={styles.rangeValue}>{fontSize}px</div>
-                </div>
-              </div>
-
-              <div style={styles.settingGroup}>
-                <label style={styles.settingLabel}>Color</label>
-                <input
-                  type="color"
-                  value={watermarkColor}
-                  onChange={(e) => setWatermarkColor(e.target.value)}
-                  style={styles.colorInput}
-                />
-              </div>
-            </div>
+            <WatermarkSettings 
+              settings={watermarkSettings} 
+              updateSetting={updateWatermarkSetting} 
+            />
           </div>
 
           <div style={styles.actionSection}>
             <button
               onClick={handleSubmit}
-              disabled={files.length === 0 || !watermarkText.trim() || isProcessing}
-              style={styles.processButton}
+              disabled={!isFormValid || isProcessing}
+              style={{
+                ...styles.processButton,
+                background: isFormValid && !isProcessing 
+                  ? 'linear-gradient(135deg, #666666 0%, #333333 100%)' 
+                  : '#ccc',
+                boxShadow: isFormValid && !isProcessing 
+                  ? '0 10px 30px rgba(102, 102, 102, 0.4)' 
+                  : 'none'
+              }}
             >
               {isProcessing ? (
                 <>
@@ -658,7 +576,7 @@ export default function WatermarkPage() {
               )}
             </button>
             
-            {(files.length === 0 || !watermarkText.trim()) && (
+            {!isFormValid && (
               <p style={{ color: '#666', marginTop: '12px' }}>
                 {files.length === 0 ? 'Please select PDF files' : 'Please enter watermark text'}
               </p>
@@ -667,13 +585,16 @@ export default function WatermarkPage() {
         </div>
       </div>
       
-      {/* Upgrade Modal is now handled by the global context */}
+      <Head>
+        <title>Add Watermark to PDF | PDF Tools</title>
+        <meta name="description" content="Add text watermarks to your PDF documents with customizable position, opacity, color, and more." />
+      </Head>
     </div>
   );
 }
 
-// /* UPGRADE MODAL RENDER */
-export function UpgradeModalRenderer({ show, msg, onClose }) {
-  if (!show) return null;
-  return <UpgradeModal message={msg} onClose={onClose} />;
-}
+// Remove unused component
+// export function UpgradeModalRenderer({ show, msg, onClose }) {
+//   if (!show) return null;
+//   return <UpgradeModal message={msg} onClose={onClose} />;
+// }
