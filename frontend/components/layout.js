@@ -26,6 +26,7 @@ const tools = [
   { title: "Add Page Numbers", desc: "Add page numbers to PDF documents.", icon: "\u{1F517}", category: "Organize PDF", path: "/pdf_add_page_numbers" },
   { title: "Edit PDF", desc: "Add page numbers to PDF documents.", icon: "\u{1F517}", category: "Organize PDF", path: "/edit_pdf" },
   { title: "Summarize PDF", desc: "Generate a summary of a PDF document.", icon: "\u{1F4DC}", category: "Optimize PDF", path: "/summarize_pdf" },
+  { title: "Content Search & Extract", desc: "Search PDFs and extract matching snippets or full text.", icon: "\u{1F50D}", category: "Optimize PDF", path: "/content_search" },
   { title: "Scan PDF", desc: "Scan documents and convert them to PDF format.", icon: "\u{1F5BC}\uFE0F", category: "Convert PDF", path: "/scan_pdf" },
   // Convert TO PDF tools (reverse conversions)
   { title: "JPG to PDF", desc: "Convert JPG images into a single PDF document.", icon: "\u{1F4C4}", category: "Convert to PDF", path: "/jpg_to_pdf" },

@@ -47,6 +47,7 @@ from unlock_pdf import unlock_pdf
 from scan_pdf import scan_pdf
 from edit_pdf import edit_pdf
 from summarize_pdf import setup_routes as setup_summarize_pdf_routes
+from search_extract_pdf import setup_routes as setup_search_extract_routes
 
 
 from functools import wraps
@@ -123,6 +124,8 @@ def initialize_database():
     
 # Setup PDF summarization routes
 setup_summarize_pdf_routes(app)
+# Setup Content Search & Extract routes
+setup_search_extract_routes(app)
 
 # Create tables at startup
 with app.app_context():
