@@ -21,7 +21,7 @@ export default function ContentSearchPage() {
       return () => clearTimeout(timer);
     }
   }, [errorMessage]);
-
+  
   const handleFileChange = (e) => {
     setFiles(Array.from(e.target.files));
     setResults(null);
