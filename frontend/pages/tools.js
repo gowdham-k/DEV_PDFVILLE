@@ -42,6 +42,11 @@ export default function Tools() {
             <h3 style={{ marginBottom: '1rem' }}>PDF Editor</h3>
             <p>Edit text and images in PDF documents</p>
           </div>
+          
+          <div style={{ padding: '1.5rem', border: '1px solid #eaeaea', borderRadius: '8px' }}>
+            <h3 style={{ marginBottom: '1rem' }}>PDF Summarizer</h3>
+            <p>Extract key information from PDF documents</p>
+          </div>
         </div>
       </div>
     </>

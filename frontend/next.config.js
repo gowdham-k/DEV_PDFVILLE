@@ -272,6 +272,11 @@ const nextConfig = {
       // WATERMARK VARIANTS
       { source: '/pdf_watermark_remover', destination: '/pdf_add_watermark' },
       
+      // SUMMARIZE VARIANTS
+      { source: '/pdf_summary', destination: '/pdf_summarize' },
+      { source: '/pdf_summarizer', destination: '/pdf_summarize' },
+      { source: '/summarize_pdf', destination: '/pdf_summarize' },
+      
       // OTHER TOOL VARIANTS
       { source: '/pdf_crop', destination: '/edit_pdf' },
       { source: '/pdf_filler', destination: '/edit_pdf' },

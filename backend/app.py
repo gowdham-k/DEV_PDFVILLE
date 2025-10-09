@@ -46,6 +46,7 @@ from remove_pages import remove_pages
 from unlock_pdf import unlock_pdf
 from scan_pdf import scan_pdf
 from edit_pdf import edit_pdf
+from summarize_pdf import setup_routes as setup_summarize_pdf_routes
 
 
 from functools import wraps
@@ -119,6 +120,9 @@ app.config['APP_CLIENT_SECRET'] = os.environ.get('APP_CLIENT_SECRET', "1idscabr0
 # Initialize database
 def initialize_database():
     Base.metadata.create_all(bind=engine)
+    
+# Setup PDF summarization routes
+setup_summarize_pdf_routes(app)
 
 # Create tables at startup
 with app.app_context():
