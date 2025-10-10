@@ -1,376 +1,147 @@
-import { useState, useEffect } from "react";
-import { useRouter } from "next/router";
+"use client";
+import { useState } from 'react';
 import { API_BASE_URL } from "../components/config";
-import HubspotTracking, { trackEvent } from "../components/HubspotTracking";
-import Head from "next/head";
-import { useUpgrade } from "../context/UpgradeContext";
-import Button from "../components/Button";
 
-export default function SummarizePage() {
-  const router = useRouter();
-  const [files, setFiles] = useState([]);
+export default function SummarizePDF() {
+  const [file, setFile] = useState(null);
+  const [query, setQuery] = useState("");
+  const [preview, setPreview] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [dragActive, setDragActive] = useState(false);
-  const [summaryRatio, setSummaryRatio] = useState(0.3);
-  const [summary, setSummary] = useState("");
-  const [errorMessage, setErrorMessage] = useState("");
-  
-  // Use global upgrade context
-  const { showUpgradeModal, setShowUpgradeModal, upgradeMessage, setUpgradeMessage } = useUpgrade();
-  
-  // Close upgrade modal
-  const closeUpgradeModal = () => {
-    setShowUpgradeModal(false);
-  };
+  const [isAI, setIsAI] = useState(false);
+  const [email, setEmail] = useState("");
 
-  // Clear error message after 5 seconds
-  useEffect(() => {
-    if (errorMessage) {
-      const timer = setTimeout(() => {
-        setErrorMessage("");
-      }, 5000);
-      return () => clearTimeout(timer);
-    }
-  }, [errorMessage]);
+  const handleFile = (e) => setFile(e.target.files[0] || null);
 
-  const handleFileChange = (e) => {
-    setFiles(Array.from(e.target.files));
-    setSummary(""); // Clear previous summary
-  };
-
-  const handleDrag = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    if (e.type === "dragenter" || e.type === "dragover") {
-      setDragActive(true);
-    } else if (e.type === "dragleave") {
-      setDragActive(false);
-    }
-  };
-
-  const handleDrop = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setDragActive(false);
-    
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      setFiles(Array.from(e.dataTransfer.files));
-      setSummary(""); // Clear previous summary
-    }
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    
-    if (files.length === 0) {
-      setErrorMessage("Please select a PDF file to summarize.");
-      return;
-    }
-
-    // Track event
-    trackEvent('pdf_summarize_started');
-    
+  const handlePreview = async () => {
+    if (!file) return;
     setIsProcessing(true);
-    setSummary("");
-    
+    const fd = new FormData();
+    fd.append('file', file);
+    fd.append('query', query);
+    fd.append('enable_ocr', 'auto');
+    if (isAI) fd.append('email', email);
     try {
-      const formData = new FormData();
-      formData.append('file', files[0]);
-      formData.append('summary_ratio', summaryRatio);
-      
-      const response = await fetch(`${API_BASE_URL}/api/summarize_pdf`, {
-        method: 'POST',
-        body: formData,
-        credentials: 'include'
-      });
-      
-      const data = await response.json();
-      
-      if (!response.ok) {
-        if (data.show_upgrade) {
-          setUpgradeMessage(data.error || "You need to upgrade to use this feature.");
-          setShowUpgradeModal(true);
+      const endpoint = isAI ? '/api/pdf-summarize-ai-preview' : '/api/pdf-summarize-preview';
+      const res = await fetch(`${API_BASE_URL}${endpoint}`, { method: 'POST', body: fd });
+      const ct = res.headers.get('content-type') || '';
+      if (!res.ok) {
+        if (ct.includes('application/json')) {
+          const errData = await res.json();
+          throw new Error(errData.error || 'Preview failed');
         } else {
-          setErrorMessage(data.error || "Failed to summarize PDF.");
+          const txt = await res.text();
+          throw new Error(`Preview failed: ${txt.slice(0,200)}`);
         }
-        setIsProcessing(false);
-        return;
       }
-      
-      setSummary(data.summary);
-      trackEvent('pdf_summarize_completed');
-      
-    } catch (error) {
-      console.error("Error summarizing PDF:", error);
-      setErrorMessage("An error occurred while summarizing the PDF.");
+      if (ct.includes('application/json')) {
+        const data = await res.json();
+        setPreview(data);
+      } else {
+        const txt = await res.text();
+        throw new Error('Unexpected response format from server');
+      }
+    } catch (err) {
+      alert(err.message || 'Preview failed');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleGenerate = async () => {
+    if (!file) return;
+    setIsProcessing(true);
+    const fd = new FormData();
+    fd.append('file', file);
+    fd.append('query', query);
+    fd.append('enable_ocr', 'auto');
+    if (isAI) fd.append('email', email);
+    try {
+      const endpoint = isAI ? '/api/pdf-summarize-ai' : '/api/pdf-summarize';
+      const res = await fetch(`${API_BASE_URL}${endpoint}`, { method: 'POST', body: fd });
+      const ct = res.headers.get('content-type') || '';
+      if (!res.ok) {
+        if (ct.includes('application/json')) {
+          const errData = await res.json();
+          throw new Error(errData.error || 'Summarize failed');
+        } else {
+          const txt = await res.text();
+          throw new Error(`Summarize failed: ${txt.slice(0,200)}`);
+        }
+      }
+      if (ct.includes('application/pdf')) {
+        const blob = await res.blob();
+        const cd = res.headers.get('Content-Disposition');
+        let name = isAI ? 'summarized_ai.pdf' : 'summarized.pdf';
+        if (cd) {
+          const m = cd.match(/filename="(.+)"/i); if (m) name = m[1];
+        }
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = name; a.click();
+        window.URL.revokeObjectURL(url);
+      } else if (ct.includes('application/json')) {
+        const data = await res.json();
+        throw new Error(data.error || 'Unexpected JSON response');
+      } else {
+        const txt = await res.text();
+        throw new Error(`Unexpected response: ${txt.slice(0,200)}`);
+      }
+    } catch (err) {
+      alert(err.message || 'Summarize failed');
     } finally {
       setIsProcessing(false);
     }
   };
 
   const styles = {
-    container: {
-      maxWidth: '1200px',
-      margin: '0 auto',
-      padding: '2rem 1rem',
-    },
-    header: {
-      textAlign: 'center',
-      marginBottom: '2rem',
-    },
-    title: {
-      fontSize: '2.5rem',
-      fontWeight: 'bold',
-      marginBottom: '1rem',
-      color: '#333',
-    },
-    subtitle: {
-      fontSize: '1.2rem',
-      color: '#666',
-      maxWidth: '800px',
-      margin: '0 auto',
-    },
-    form: {
-      marginTop: '2rem',
-    },
-    fileUpload: {
-      border: '2px dashed #ccc',
-      borderRadius: '8px',
-      padding: '2rem',
-      textAlign: 'center',
-      marginBottom: '2rem',
-      backgroundColor: dragActive ? '#f0f9ff' : '#f9f9f9',
-      cursor: 'pointer',
-      transition: 'all 0.3s ease',
-    },
-    fileUploadActive: {
-      borderColor: '#3498db',
-      backgroundColor: '#f0f9ff',
-    },
-    fileInput: {
-      display: 'none',
-    },
-    uploadIcon: {
-      fontSize: '3rem',
-      marginBottom: '1rem',
-      color: '#3498db',
-    },
-    uploadText: {
-      fontSize: '1.2rem',
-      color: '#666',
-      marginBottom: '0.5rem',
-    },
-    uploadSubtext: {
-      fontSize: '0.9rem',
-      color: '#999',
-    },
-    settingsContainer: {
-      marginBottom: '2rem',
-      padding: '1.5rem',
-      backgroundColor: '#f9f9f9',
-      borderRadius: '8px',
-      boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
-    },
-    settingsTitle: {
-      fontSize: '1.2rem',
-      fontWeight: 'bold',
-      marginBottom: '1rem',
-      color: '#333',
-    },
-    settingsRow: {
-      display: 'flex',
-      flexDirection: 'column',
-      marginBottom: '1rem',
-    },
-    settingsLabel: {
-      fontSize: '1rem',
-      marginBottom: '0.5rem',
-      color: '#555',
-    },
-    rangeContainer: {
-      display: 'flex',
-      alignItems: 'center',
-      gap: '1rem',
-    },
-    range: {
-      flex: 1,
-      height: '8px',
-      WebkitAppearance: 'none',
-      appearance: 'none',
-      borderRadius: '5px',
-      background: '#ddd',
-      outline: 'none',
-    },
-    rangeValue: {
-      minWidth: '60px',
-      textAlign: 'center',
-      padding: '0.25rem 0.5rem',
-      backgroundColor: '#3498db',
-      color: 'white',
-      borderRadius: '4px',
-      fontSize: '0.9rem',
-    },
-    buttonContainer: {
-      display: 'flex',
-      justifyContent: 'center',
-      marginTop: '2rem',
-    },
-    summaryContainer: {
-      marginTop: '2rem',
-      padding: '1.5rem',
-      backgroundColor: '#f9f9f9',
-      borderRadius: '8px',
-      boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
-    },
-    summaryTitle: {
-      fontSize: '1.2rem',
-      fontWeight: 'bold',
-      marginBottom: '1rem',
-      color: '#333',
-    },
-    summaryText: {
-      fontSize: '1rem',
-      lineHeight: '1.6',
-      color: '#333',
-      whiteSpace: 'pre-wrap',
-    },
-    errorMessage: {
-      backgroundColor: '#ffebee',
-      color: '#c62828',
-      padding: '0.75rem',
-      borderRadius: '4px',
-      marginBottom: '1rem',
-      textAlign: 'center',
-    },
-    loadingSpinner: {
-      display: 'flex',
-      justifyContent: 'center',
-      alignItems: 'center',
-      marginTop: '2rem',
-    },
-    spinner: {
-      border: '4px solid rgba(0, 0, 0, 0.1)',
-      borderLeft: '4px solid #3498db',
-      borderRadius: '50%',
-      width: '30px',
-      height: '30px',
-      animation: 'spin 1s linear infinite',
-    },
-    '@keyframes spin': {
-      '0%': { transform: 'rotate(0deg)' },
-      '100%': { transform: 'rotate(360deg)' },
-    },
-    fileInfo: {
-      marginTop: '1rem',
-      padding: '0.5rem',
-      backgroundColor: '#e8f4fd',
-      borderRadius: '4px',
-      fontSize: '0.9rem',
-      color: '#2980b9',
-    },
+    container:{maxWidth:'900px',margin:'0 auto',padding:'24px'},
+    card:{background:'#fff',padding:'24px',borderRadius:'12px',boxShadow:'0 2px 12px rgba(0,0,0,0.06)'},
+    title:{fontSize:'28px',fontWeight:700,marginBottom:'8px'},
+    subtitle:{color:'#666',marginBottom:'16px'},
+    input:{margin:'12px 0'},
+    btn:{padding:'10px 16px',border:'none',borderRadius:'8px',cursor:'pointer',marginRight:'8px',background:'#0070f3',color:'#fff'},
+    secBtn:{padding:'10px 16px',border:'1px solid #ddd',borderRadius:'8px',cursor:'pointer',background:'#fff'},
+    pre:{background:'#f7f7f7',padding:'12px',borderRadius:'8px',whiteSpace:'pre-wrap'}
   };
 
   return (
-    <div>
-      <Head>
-        <title>PDF Summarizer - Extract Key Information from Your PDF</title>
-        <meta name="description" content="Summarize your PDF documents automatically. Extract the most important information from your PDFs with our AI-powered summarization tool." />
-        <meta name="keywords" content="PDF summarizer, PDF summary, extract PDF information, PDF key points, PDF AI summary" />
-        <style>{`
-          @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-          }
-        `}</style>
-      </Head>
-
-      <HubspotTracking />
-
-      <div style={styles.container}>
-        <div style={styles.header}>
-          <h1 style={styles.title}>PDF Summarizer</h1>
-          <p style={styles.subtitle}>
-            Extract the most important information from your PDF documents automatically.
-            Our AI-powered tool analyzes your document and creates a concise summary.
-          </p>
-        </div>
-
-        <form onSubmit={handleSubmit} style={styles.form}>
-          {errorMessage && (
-            <div style={styles.errorMessage}>{errorMessage}</div>
+    <div style={styles.container}>
+      <div style={styles.card}>
+        <h1 style={styles.title}>PDF Summarization</h1>
+        <p style={styles.subtitle}>Generate a concise summary page, search content, and download the summarized PDF.</p>
+        <input type="file" accept=".pdf" onChange={handleFile} style={styles.input} />
+        <input type="text" value={query} onChange={e=>setQuery(e.target.value)} placeholder="Optional: search keyword" style={{...styles.input,padding:'10px',width:'100%'}} />
+        <div style={{display:'flex',gap:'12px',alignItems:'center'}}>
+          <label style={{display:'flex',alignItems:'center',gap:'8px'}}>
+            <input type="checkbox" checked={isAI} onChange={e=>setIsAI(e.target.checked)} />
+            Use AI (Premium)
+          </label>
+          {isAI && (
+            <input type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="Enter premium account email" style={{...styles.input,padding:'10px',flex:1}} />
           )}
-
-          <div 
-            style={{
-              ...styles.fileUpload,
-              ...(dragActive ? styles.fileUploadActive : {})
-            }}
-            onDragEnter={handleDrag}
-            onDragOver={handleDrag}
-            onDragLeave={handleDrag}
-            onDrop={handleDrop}
-            onClick={() => document.getElementById('file-input').click()}
-          >
-            <div style={styles.uploadIcon}>📄</div>
-            <p style={styles.uploadText}>
-              {files.length > 0 
-                ? `Selected: ${files[0].name}`
-                : 'Drag & drop your PDF file here or click to browse'
-              }
-            </p>
-            <p style={styles.uploadSubtext}>
-              Supports PDF files up to 10MB
-            </p>
-            <input
-              type="file"
-              id="file-input"
-              style={styles.fileInput}
-              onChange={handleFileChange}
-              accept=".pdf"
-            />
-          </div>
-
-          <div style={styles.settingsContainer}>
-            <h3 style={styles.settingsTitle}>Summary Settings</h3>
-            
-            <div style={styles.settingsRow}>
-              <label style={styles.settingsLabel}>
-                Summary Length: {Math.round(summaryRatio * 100)}% of original
-              </label>
-              <div style={styles.rangeContainer}>
-                <input
-                  type="range"
-                  min="0.1"
-                  max="0.5"
-                  step="0.05"
-                  value={summaryRatio}
-                  onChange={(e) => setSummaryRatio(parseFloat(e.target.value))}
-                  style={styles.range}
-                />
-                <span style={styles.rangeValue}>{Math.round(summaryRatio * 100)}%</span>
+        </div>
+        <div style={{marginTop:'8px'}}>
+          <button onClick={handlePreview} style={styles.btn} disabled={isProcessing || !file}>Preview Summary</button>
+          <button onClick={handleGenerate} style={styles.secBtn} disabled={isProcessing || !file}>Generate & Download PDF</button>
+        </div>
+        {isProcessing && <p style={{marginTop:'12px'}}>Processing...</p>}
+        {preview && (
+          <div style={{marginTop:'16px'}}>
+            <h3>Summary Preview</h3>
+            <div style={styles.pre}>{preview.summary}</div>
+            {preview.matches && preview.matches.length>0 && (
+              <div style={{marginTop:'12px'}}>
+                <h4>Content Search Results</h4>
+                {preview.matches.map(m=> (
+                  <div key={m.page} style={{marginBottom:'8px'}}>
+                    <strong>Page {m.page} – {m.count} matches</strong>
+                    <ul>
+                      {m.snippets.map((s, i)=> <li key={i}>{s}</li>)}
+                    </ul>
+                  </div>
+                ))}
               </div>
-            </div>
-          </div>
-
-          <div style={styles.buttonContainer}>
-            <Button
-              type="submit"
-              disabled={isProcessing || files.length === 0}
-              isLoading={isProcessing}
-              loadingText="Summarizing..."
-            >
-              Summarize PDF
-            </Button>
-          </div>
-        </form>
-
-        {summary && (
-          <div style={styles.summaryContainer}>
-            <h3 style={styles.summaryTitle}>Summary</h3>
-            <div style={styles.summaryText}>
-              {summary}
-            </div>
+            )}
           </div>
         )}
       </div>
