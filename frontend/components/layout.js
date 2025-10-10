@@ -6,15 +6,17 @@ import { API_BASE_URL } from "../components/config";
 export const CategoryContext = createContext();
 
 const tools = [
+  { title: "Add Page Numbers", desc: "Add page numbers to PDF documents.", icon: "\u{1F517}", category: "Organize PDF", path: "/pdf_add_page_numbers" },
   { title: "Split PDF", desc: "Separate one page or multiple pages from a PDF.", icon: "\u2702\uFE0F", category: "Organize PDF", path: "/split_pdf" },
+  { title: "Rotate PDF", desc: "Rotate PDF pages to fix orientation.", icon: "\u{1F504}", category: "Organize PDF", path: "/rotate_pdf" },
+  { title: "Repair PDF", desc: "Repair corrupted or damaged PDFs.", icon: "\u{1F527}", category: "Optimize PDF", path: "/repair_pdf"},
   { title: "Merge PDF", desc: "Combine multiple PDFs into one file.", icon: "\u{1F517}", category: "Organize PDF", path: "/merge_pdf" },
   { title: "Compress PDF", desc: "Reduce PDF file size while maintaining quality.", icon: "\u{1F5DC}\uFE0F", category: "Optimize PDF", path: "/compress_pdf" },
   { title: "Add Watermark", desc: "Add text or image watermark to your PDF.", icon: "\u{1F4A7}", category: "Organize PDF", path: "/pdf_add_watermark" },
   { title: "Remove Pages", desc: "Delete specific pages from your PDF document.", icon: "\u{1F5D1}\uFE0F", category: "Organize PDF", path: "/remove_pages" },
-  { title: "Edit PDF", desc: "Modify text, images, and other elements in your PDF.", icon: "\u{1F4DD}", category: "Organize PDF", path: "/edit_pdf" },
   { title: "Unlock PDF", desc: "Unlock password-protected PDFs.", icon: "\u{1F513}", category: "Secure PDF", path: "/unlock_pdf" },
-  {title: "Rotate PDF", desc: "Rotate PDF pages to fix orientation.", icon: "\u{1F504}", category: "Organize PDF", path: "/rotate_pdf"},
-  {title: "Repair PDF", desc: "Repair corrupted or damaged PDFs.", icon: "\u{1F527}", category: "Optimize PDF", path: "/repair_pdf"},
+  { title: "Scan PDF", desc: "Scan documents and convert them to PDF format.", icon: "\u{1F5BC}\uFE0F", category: "Convert PDF", path: "/scan_pdf" },
+
   // Convert FROM PDF tools
   { title: "Convert to JPG", desc: "Convert PDF pages into JPG images.", icon: "\u{1F5BC}\uFE0F", category: "Convert PDF", path: "/pdf_to_jpg" },
   { title: "Convert to PNG", desc: "Convert PDF pages into PNG images.", icon: "\u{1F3A8}", category: "Convert PDF", path: "/pdf_to_png" },
@@ -23,11 +25,7 @@ const tools = [
   { title: "Convert to Excel", desc: "Change PDFs into Excel spreadsheets.", icon: "\u{1F4C8}", category: "Convert PDF", path: "/pdf_to_excel" },
   { title: "Convert to HTML", desc: "Transform PDFs into HTML documents.", icon: "\u{1F310}", category: "Convert PDF", path: "/pdf_to_html" },
   { title: "Convert to PDF/A", desc: "Convert PDF to PDF/A format for long-term archiving.", icon: "\u{1F4DA}", category: "Convert PDF", path: "/pdf_to_pdfa" },
-  { title: "Add Page Numbers", desc: "Add page numbers to PDF documents.", icon: "\u{1F517}", category: "Organize PDF", path: "/pdf_add_page_numbers" },
-  { title: "Edit PDF", desc: "Add page numbers to PDF documents.", icon: "\u{1F517}", category: "Organize PDF", path: "/edit_pdf" },
-  { title: "Summarize PDF", desc: "Generate a summary of a PDF document.", icon: "\u{1F4DC}", category: "Optimize PDF", path: "/summarize_pdf" },
-  { title: "Content Search & Extract", desc: "Search PDFs and extract matching snippets or full text.", icon: "\u{1F50D}", category: "Optimize PDF", path: "/content_search" },
-  { title: "Scan PDF", desc: "Scan documents and convert them to PDF format.", icon: "\u{1F5BC}\uFE0F", category: "Convert PDF", path: "/scan_pdf" },
+  
   // Convert TO PDF tools (reverse conversions)
   { title: "JPG to PDF", desc: "Convert JPG images into a single PDF document.", icon: "\u{1F4C4}", category: "Convert to PDF", path: "/jpg_to_pdf" },
   { title: "PNG to PDF", desc: "Convert PNG images into a single PDF document.", icon: "\u{1F4CB}", category: "Convert to PDF", path: "/png_to_pdf" },
@@ -36,10 +34,13 @@ const tools = [
   { title: "Excel to PDF", desc: "Convert Excel spreadsheets to PDF format.", icon: "\u{1F4CA}", category: "Convert to PDF", path: "/excel_to_pdf" },
   { title: "HTML to PDF", desc: "Convert HTML documents to PDF format.", icon: "\u{1F517}", category: "Convert to PDF", path: "/html_to_pdf" },  
   { title: "Add Signature", desc: "Add a signature to a PDF file.", icon: "\u{1F512}", category: "Secure PDF", path: "/sign_pdf" },
+  { title: "Edit PDF", desc: "Add page numbers to PDF documents.", icon: "\u{1F517}", category: "Organize PDF", path: "/edit_pdf" },
+
   { title: "Secure PDF", desc: "Protect your PDF with a password.", icon: "\u{1F512}", category: "Secure PDF", path: "/pdf_secure" },
 ];
 
 const categories = ["All", "Organize PDF", "Convert PDF", "Convert to PDF", "Optimize PDF", "Secure PDF"];
+
 export default function Layout({ children }) {
   const [isMobile, setIsMobile] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -61,14 +62,13 @@ export default function Layout({ children }) {
   const [loading, setLoading] = useState(false);
   const [activeSubmenu, setActiveSubmenu] = useState(null);
 
-  // Using imported API_BASE_URL from components/config;
+  const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://pdfville.com:5000";
 
 const sidebarTools = [
   { name: "Home", path: "/", icon: "\u{1F3E0}" },        
   { name: "Split", path: "/split_pdf", icon: "\u2702\uFE0F" }, 
   { name: "Merge", path: "/merge_pdf", icon: "\u{1F517}" }, 
   { name: "Compress", path: "/compress_pdf", icon: "\u{1F5DC}\uFE0F" }, 
-  { name: "Edit", path: "/edit_pdf", icon: "\u{1F4DD}" },
   { name: "Convert", path: "/convert_pdf", icon: "\u{1F504}" }, 
   { name: "To PDF", path: "/convert_to_pdf", icon: "\u{1F4C4}" },
   { name: "Secure", path: "/pdf_secure", icon: "\u{1F512}" },
@@ -86,7 +86,7 @@ const sidebarTools = [
       
       if (token) {
         try {
-          const response = await fetch(`${API_BASE_URL}/api/profile`, {
+          const response = await fetch(`${API_BASE_URL}/profile`, {
             headers: {
               "Authorization": `Bearer ${token}`,
               "Content-Type": "application/json"
@@ -122,7 +122,8 @@ const MobileMenu = ({
   router, 
   isAuthenticated, 
   user, 
-  handleAuthButton 
+  handleAuthButton,
+  setSelectedCategory
 }) => {
   const [expandedCategories, setExpandedCategories] = useState({});
 
@@ -138,14 +139,17 @@ const MobileMenu = ({
       style={{
         position: "fixed",
         top: "60px",
-        right: "0",
-        left: "0",
-        bottom: "0",
+        right: "20px",
+        width: "min(90vw, 360px)",
+        maxHeight: "70vh",
         background: "#fff",
         padding: "1rem",
         zIndex: 2000,
         overflowY: "auto",
-        height: "calc(100vh - 60px)",
+        border: "1px solid #e5e5e5",
+        borderRadius: "10px",
+        boxShadow: "0 10px 30px rgba(0,0,0,0.15)",
+        textAlign: "center",
       }}
     >
       {/* Close button */}
@@ -159,7 +163,7 @@ const MobileMenu = ({
             cursor: "pointer",
           }}
         >
-          Ã—
+          x
         </button>
       </div>
 
@@ -177,14 +181,15 @@ const MobileMenu = ({
                 padding: "12px 0",
                 cursor: "pointer",
                 display: "flex",
-                justifyContent: "space-between",
+                justifyContent: "center",
                 alignItems: "center",
+                gap: "8px",
                 borderBottom: "1px solid #f0f0f0",
                 fontWeight: "600",
               }}
             >
               <span>{category}</span>
-              <span>  {expandedCategories[category] ? String.fromCharCode(0x25BC) : String.fromCharCode(0x25BA)}</span>
+              <span>{expandedCategories[category] ? String.fromCharCode(0x25BC) : String.fromCharCode(0x25BA)}</span>
             </div>
             
             {expandedCategories[category] && (
@@ -193,6 +198,7 @@ const MobileMenu = ({
                   <div
                     key={tool.title}
                     onClick={() => {
+                      setSelectedCategory(category);
                       handleNavigation(tool.path, tool);
                       setMobileMenuOpen(false);
                     }}
@@ -203,6 +209,8 @@ const MobileMenu = ({
                       alignItems: "center",
                       gap: "10px",
                       borderBottom: "1px solid #f8f8f8",
+                      justifyContent: "center",
+                      textAlign: "center",
                     }}
                   >
                     <span style={{ fontSize: "1.2rem" }}>{tool.icon}</span>
@@ -255,38 +263,34 @@ const MobileMenu = ({
       )}
       
       {/* Auth button */}
-      <button
-        onClick={() => {
-          handleAuthButton();
-          setMobileMenuOpen(false);
-        }}
-        style={{
-          marginTop: "1rem",
-          width: "100%",
-          background: isAuthenticated
-            ? "linear-gradient(135deg, #667eea 0%, #764ba2 100%)"
-            : "#000",
-          color: "#fff",
-          border: "none",
-          padding: "0.75rem",
-          borderRadius: "6px",
-          fontSize: "1rem",
-          fontWeight: "500",
-          marginLeft: "-5rem"
-        }}
-      >
-        {isAuthenticated ? "Logout" : "Login / Signup"}
-      </button>
+<button
+  onClick={handleAuthButton}
+  style={{
+    background: "transparent",
+    color: isAuthenticated ? "#764ba2" : "#000",
+    border: "1px solid #ccc",
+    padding: "0.5rem 1.2rem",
+    borderRadius: "6px",
+    fontSize: "0.9rem",
+    cursor: "pointer",
+    transition: "all 0.3s ease",
+    minWidth: "120px",
+    fontWeight: "500",
+  }}
+>
+  {isAuthenticated ? "Logout" : "Login / Signup"}
+</button>
+
     </div>
   );
 };
-
+    
 
   const handleLogout = async () => {
     try {
       const token = localStorage.getItem("access_token");
       if (token) {
-        await fetch(`${API_BASE_URL}/api/logout`, {
+        await fetch(`${API_BASE_URL}/logout`, {
           method: "POST",
           headers: {
             "Authorization": `Bearer ${token}`,
@@ -313,27 +317,6 @@ const MobileMenu = ({
     
     setIsOpen(false);
     setActiveSubmenu(null);
-  };
-  
-  // Function to handle footer navigation with scroll to top
-  const handleFooterNavigation = (path) => {
-    // Navigate to the path first
-    router.push(path).then(() => {
-      // Use setTimeout to ensure the page has rendered before scrolling
-      setTimeout(() => {
-        window.scrollTo({
-          top: 0,
-          left: 0,
-          behavior: 'smooth'
-        });
-      }, 100);
-    });
-  };
-
-  // Function to handle opening legal pages in new tabs
-  const handleLegalPageNavigation = (path) => {
-    const baseUrl = window.location.origin;
-    window.open(`${baseUrl}${path}`, '_blank', 'noopener,noreferrer');
   };
 
   const handleAuthButton = () => {
@@ -444,7 +427,7 @@ const MobileMenu = ({
               padding: isMobile ? "1rem" : "1rem 2rem",
               display: "flex",
               alignItems: "center",
-              justifyContent: "space-between",
+              justifyContent: "flex-start",
               position: "sticky",
               top: 0,
               zIndex: 900, // Reduced to prevent overlap issues
@@ -453,12 +436,12 @@ const MobileMenu = ({
           >
             {/* Left Logo + Categories */}
             <div style={{ display: "flex", alignItems: "center", gap: "1.5rem" }}>
+              {/* Moved hamburger button to right side */}
               <div
                 onClick={() => router.push("/")}
                 style={{
                   fontWeight: "800",
                   fontSize: isMobile ? "1.2rem" : "1.5rem",
-                  cursor: "pointer",
                   color: "#808080",
                   letterSpacing: "1px",
                   marginLeft: isMobile ? "0" : "2rem",
@@ -467,43 +450,20 @@ const MobileMenu = ({
                 PDFVILLE
               </div>
 
-              {/* Categories (Desktop only) */}
-              {!isMobile && router.pathname === "/" && (
-                <nav style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-                  {categories.map((c, i) => (
-                    <button
-                      key={i}
-                      onClick={() => setSelectedCategory(c)}
-                      style={{
-                        padding: "0.4rem 1rem",
-                        fontSize: "0.9rem",
-                        color: selectedCategory === c ? "#fff" : "#000",
-                        background: selectedCategory === c ? "#000" : "transparent",
-                        border: "1px solid #000",
-                        borderRadius: "8px",
-                        cursor: "pointer",
-                        transition: "all 0.3s ease",
-                      }}
-                    >
-                      {c}
-                    </button>
-                  ))}
-                </nav>
-              )}
+              {/* Categories buttons removed to keep header consistent across pages. Dropdown menu shown across all pages. */}
             </div>
 
             {/* Desktop Menu (Categories w/ submenu + Right buttons) */}
             {!isMobile && (
               <>
-                {router.pathname !== "/" && (
-                  <nav
-                    style={{
-                      display: "flex",
-                      gap: "10px",
-                      marginLeft: "auto",
-                      position: "relative",
-                    }}
-                  >
+                <nav
+                  style={{
+                    display: "flex",
+                    gap: "10px",
+                    marginLeft: "auto",
+                    position: "relative",
+                  }}
+                >
                     {categories.map((cat) => {
                       const categoryTools =
                         cat === "All" ? tools : tools.filter((t) => t.category === cat);
@@ -551,7 +511,10 @@ const MobileMenu = ({
                               {categoryTools.map((tool) => (
                                 <div
                                   key={tool.title}
-                                  onClick={() => handleNavigation(tool.path, tool)}
+                                  onClick={() => {
+                                    setSelectedCategory(cat);
+                                    handleNavigation(tool.path, tool);
+                                  }}
                                   style={{
                                     padding: "18px 20px",
                                     cursor: "pointer",
@@ -580,102 +543,99 @@ const MobileMenu = ({
                       );
                     })}
                   </nav>
-                )}
 
                 {/* Right Section */}
                 <div
-  style={{
-    display: "flex",
-    alignItems: "center",
-    gap: "1rem", // Reduced gap from 1.25rem to 1rem
-    position: "relative",
-    marginRight: "2.5rem", // Added right margin to push content left
-  }}
->
-  <div
-    style={{
-      cursor: "pointer",
-      fontSize: "1rem",
-      padding: "5px 10px",
-      transition: "0.2s ease",
-      fontWeight: "500",
-      marginLeft: "3rem", // Added left margin to push it further left
-    }}
-    onClick={() => router.push("/pricing")}
-  >
-    Pricing
-  </div>
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "1rem",
+                    position: "relative",
+                    marginLeft: "auto",
+                    marginRight: "2.5rem",
+                  }}
+                >
+                  {/* Pricing and Login moved into the left hamburger menu */}
+                  <button
+                    onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                    style={{
+                      fontSize: "1.5rem",
+                      background: "none",
+                      border: "none",
+                      cursor: "pointer",
+                      padding: "5px",
+                      color: "#333",
+                    }}
+                    aria-label="Open menu"
+                  >
+                    ☰
+                  </button>
+                </div>
+                <div
+                  style={{
+                    cursor: "pointer",
+                    fontSize: "1rem",
+                    padding: "5px 10px",
+                    transition: "0.2s ease",
+                    fontWeight: "500",
+                    marginLeft: "0",
+                    display: "none",
+                  }}
+                  onClick={() => router.push("/pricing")}
+                >
+                  Pricing
+                </div>
 
-  {isAuthenticated && user && (
-    <>
-      <span style={{ color: "#ccc" }}>|</span>
-      <div
-        style={{
-          color: "#666",
-          fontSize: "0.9rem",
-          padding: "5px 10px",
-        }}
-      >
-        Welcome, {user.email}{" "}
-        {user.isPremium ? "(Premium)" : "(Free)"}
-      </div>
-    </>
-  )}
+                {isAuthenticated && user && (
+                  <div
+                    style={{
+                      color: "#666",
+                      fontSize: "0.9rem",
+                      padding: "5px 10px",
+                    }}
+                  >
+                    Welcome, {user.email}{" "}
+                    {user.isPremium ? "(Premium)" : "(Free)"}
+                  </div>
+                )}
 
-  <span style={{ color: "#ccc" }}>|</span>
-  <button
-    onClick={handleAuthButton}
-    style={{
-      background: isAuthenticated
-        ? "linear-gradient(135deg, #667eea 0%, #764ba2 100%)"
-        : "#000",
-      color: "#fff",
-      border: "none",
-      padding: "0.5rem 1.2rem",
-      borderRadius: "6px",
-      fontSize: "0.9rem",
-      cursor: "pointer",
-      transition: "all 0.3s ease",
-      minWidth: "120px",
-      fontWeight: "500",
-    }}
-  >
-    {isAuthenticated ? "Logout" : "Login / Signup"}
-  </button>
-  </div>
+                <span style={{ display: "none" }}>|</span>
+                <button
+                  onClick={handleAuthButton}
+                  style={{
+                    background: isAuthenticated
+                      ? "linear-gradient(135deg, #667eea 0%, #764ba2 100%)"
+                      : "#000",
+                    color: "#fff",
+                    border: "none",
+                    padding: "0.5rem 1.2rem",
+                    borderRadius: "6px",
+                    fontSize: "0.9rem",
+                    cursor: "pointer",
+                    transition: "all 0.3s ease",
+                    minWidth: "120px",
+                    fontWeight: "500",
+                    display: "none",
+                  }}
+                >
+                  {isAuthenticated ? "Logout" : "Login / Signup"}
+                </button>
               </>
             )}
 
             {/* Mobile Hamburger Menu */}
-{isMobile && (
-  <div style={{ position: "relative" }}>
-    <button
-      onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-      style={{
-        fontSize: "1.5rem",
-        background: "none",
-        border: "none",
-        cursor: "pointer",
-        padding: "5px",
-        zIndex: 1000,
-      }}
-    >
-      ?
-    </button>
-
-    {mobileMenuOpen && (
-      <MobileMenu 
-        categories={categories} 
-        tools={tools} 
-        setMobileMenuOpen={setMobileMenuOpen} 
-        handleNavigation={handleNavigation}
-        router={router}
-        isAuthenticated={isAuthenticated}
-        user={user}
-        handleAuthButton={handleAuthButton}
-      />
-    )}
-  </div>
+{mobileMenuOpen && (
+  <MobileMenu
+    categories={categories}
+    tools={tools}
+    setMobileMenuOpen={setMobileMenuOpen}
+    handleNavigation={handleNavigation}
+    router={router}
+    isAuthenticated={isAuthenticated}
+    user={user}
+    handleAuthButton={handleAuthButton}
+    setSelectedCategory={setSelectedCategory}
+  />
 )}
           </header>
 
@@ -683,7 +643,6 @@ const MobileMenu = ({
           <div style={{ paddingTop: isMobile ? "0" : "0" }}>
             {children}
           </div>
-          
           {/* Footer */}
           <footer style={{
             width: "100%",
@@ -723,44 +682,11 @@ const MobileMenu = ({
                 </ul>
               </div>
               
-              {/* Resources Column */}
-              <div style={{ minWidth: isMobile ? "100%" : "150px" }}>
-                <h3 style={{ fontSize: "1rem", fontWeight: "600", marginBottom: "1rem" }}>RESOURCES</h3>
-                <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
-                  <li style={{ marginBottom: "0.5rem" }}>
-                    <div onClick={() => window.open("#", "_blank")} style={{ cursor: "pointer", fontSize: "0.9rem" }}>PDFVille Desktop</div>
-                  </li>
-                  <li style={{ marginBottom: "0.5rem" }}>
-                    <div onClick={() => window.open("#", "_blank")} style={{ cursor: "pointer", fontSize: "0.9rem" }}>PDFVille Mobile</div>
-                  </li>
-                  <li style={{ marginBottom: "0.5rem" }}>
-                    <div onClick={() => window.open("#", "_blank")} style={{ cursor: "pointer", fontSize: "0.9rem" }}>PDFVille Sign</div>
-                  </li>
-                  <li style={{ marginBottom: "0.5rem" }}>
-                    <div onClick={() => window.open("#", "_blank")} style={{ cursor: "pointer", fontSize: "0.9rem" }}>PDFVille API</div>
-                  </li>
-                  <li style={{ marginBottom: "0.5rem" }}>
-                    <div onClick={() => window.open("#", "_blank")} style={{ cursor: "pointer", fontSize: "0.9rem" }}>PDFVille IMG</div>
-                  </li>
-                </ul>
-              </div>
               
-              {/* Solutions Column */}
-              <div style={{ minWidth: isMobile ? "100%" : "150px" }}>
-                <h3 style={{ fontSize: "1rem", fontWeight: "600", marginBottom: "1rem" }}>SOLUTIONS</h3>
-                <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
-                  <li style={{ marginBottom: "0.5rem" }}>
-                    <div onClick={() => handleFooterNavigation("/business")} style={{ cursor: "pointer", fontSize: "0.9rem" }}>Business</div>
-                  </li>
-                  <li style={{ marginBottom: "0.5rem" }}>
-                    <div onClick={() => handleFooterNavigation("/education")} style={{ cursor: "pointer", fontSize: "0.9rem" }}>Education</div>
-                  </li>
-                </ul>
-              </div>
               
               {/* Legal Column */}
               <div style={{ minWidth: isMobile ? "100%" : "150px" }}>
-                <h3 style={{ fontSize: "1rem", fontWeight: "600", marginBottom: "1rem" }}>LEGAL</h3>
+                <h3 style={{ fontSize: "1rem", fontWeight: "600", marginBottom: "1rem" }}>QUICK LINKS</h3>
                 <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
                   <li style={{ marginBottom: "0.5rem" }}>
                     <div onClick={() => handleLegalPageNavigation("/security")} style={{ cursor: "pointer", fontSize: "0.9rem" }}>Security</div>
@@ -794,24 +720,6 @@ const MobileMenu = ({
                     <div onClick={() => handleFooterNavigation("/press")} style={{ cursor: "pointer", fontSize: "0.9rem" }}>Press</div>
                   </li>
                 </ul>
-              </div>
-              
-              {/* Download Links */}
-              <div style={{ minWidth: isMobile ? "100%" : "200px" }}>
-                <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-                  <div onClick={() => window.open("#", "_blank")} style={{ cursor: "pointer" }}>
-                     <img src="/google-play-badge.svg" alt="Get it on Google Play" style={{ height: "40px" }} />
-                   </div>
-                   <div onClick={() => window.open("#", "_blank")} style={{ cursor: "pointer" }}>
-                     <img src="/app-store-badge.svg" alt="Download on the App Store" style={{ height: "40px" }} />
-                   </div>
-                   <div onClick={() => window.open("#", "_blank")} style={{ cursor: "pointer" }}>
-                     <img src="/mac-app-store-badge.svg" alt="Download on the Mac App Store" style={{ height: "40px" }} />
-                   </div>
-                   <div onClick={() => window.open("#", "_blank")} style={{ cursor: "pointer" }}>
-                     <img src="/microsoft-store-badge.svg" alt="Get it from Microsoft" style={{ height: "40px" }} />
-                  </div>
-                </div>
               </div>
             </div>
             
@@ -854,7 +762,7 @@ const MobileMenu = ({
               
               {/* Copyright */}
               <div style={{ fontSize: "0.9rem", color: "#9ca3af" }}>
-                © PDFVille {new Date().getFullYear()} • Your PDF Editor
+                © PDFVille {new Date().getFullYear()} • all rights reserved
               </div>
             </div>
           </footer>
