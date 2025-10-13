@@ -2,6 +2,32 @@ import React from 'react';
 import Head from 'next/head';
 
 export default function PrivacyPolicy() {
+  const tableStyle = {
+    width: '100%',
+    borderCollapse: 'collapse',
+    margin: '1rem 0',
+  };
+  const thStyle = {
+    backgroundColor: '#2e86de',
+    color: '#fff',
+    padding: '10px',
+    textAlign: 'left',
+    border: '1px solid #d0e3ff',
+  };
+  const tdStyle = {
+    padding: '10px',
+    border: '1px solid #e0e0e0',
+    verticalAlign: 'top',
+  };
+  const sectionBadge = {
+    background: '#eaf2ff',
+    borderLeft: '4px solid #2e86de',
+    padding: '0.75rem 1rem',
+    borderRadius: '6px',
+    color: '#2456a6',
+    marginBottom: '1rem'
+  };
+
   return (
     <>
       <Head>
@@ -9,14 +35,16 @@ export default function PrivacyPolicy() {
         <meta name="description" content="PDFVille Privacy Policy" />
       </Head>
       
-      <div style={{ maxWidth: '800px', margin: '0 auto', padding: '2rem 1rem' }}>
-        <h1 style={{ fontSize: '2rem', marginBottom: '1.5rem' }}>Privacy Policy</h1>
+      <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '2rem 1rem', color: '#333' }}>
+        <h1 style={{ fontSize: '2rem', marginBottom: '0.5rem', color: '#111' }}>Privacy Policy</h1>
         
-        <p style={{ marginBottom: '1rem', lineHeight: '1.6' }}>
+        <p style={{ marginBottom: '1rem', lineHeight: '1.6', color: '#555' }}>
           Last Updated: {new Date().toLocaleDateString()}
         </p>
+
+        <div style={sectionBadge}>We value your privacy and aim to be transparent about the data we collect, how we use it, and the choices you have. Below you’ll find details along with easy-to-read tables.</div>
         
-        <h2 style={{ fontSize: '1.5rem', marginTop: '2rem', marginBottom: '1rem' }}>Scope and Purpose</h2>
+        <h2 style={{ fontSize: '1.5rem', marginTop: '1.5rem', marginBottom: '0.75rem' }}>Scope and Purpose</h2>
         <p style={{ marginBottom: '1rem', lineHeight: '1.6' }}>
           This PDFVille Privacy Notice ("Notice") applies to you when you provide your personal information to us when communicating with us or interacting with our websites, mobile apps, products, or services ("Services").
         </p>
@@ -35,58 +63,170 @@ export default function PrivacyPolicy() {
           We may change or update this Privacy Notice, including by posting changes on our websites, but we will notify you of any material changes to it as required by law.
         </p>
         
-        <h2 style={{ fontSize: '1.5rem', marginTop: '2rem', marginBottom: '1rem' }}>Personal Information We Collect</h2>
+        <h2 style={{ fontSize: '1.5rem', marginTop: '1.5rem', marginBottom: '0.75rem' }}>Personal Information We Collect</h2>
         <p style={{ marginBottom: '1rem', lineHeight: '1.6' }}>
           The types of personal information we may collect depend on your relationship with us and the Services you use:
         </p>
-        <ul style={{ marginLeft: '2rem', marginBottom: '1rem', lineHeight: '1.6' }}>
-          <li><strong>Contact Information:</strong> Your full name, email address, mailing address, or phone number.</li>
-          <li><strong>Demographic Information:</strong> Age, gender, marital status, and similar demographic details, if you register or participate in our surveys.</li>
-          <li><strong>Payment Information:</strong> Billing address, first and last four digits of a credit card number, expiration date, and the Services purchased.</li>
-          <li><strong>Electronic Signature:</strong> A typed name, a drawn signature, or an image of a signature that you upload.</li>
-          <li><strong>Documents:</strong> The files you upload to your account.</li>
-          <li><strong>Information You Submit to Us:</strong> Any information necessary to provide you with support that you request or any communications with PDFVille via our websites, mobile apps, chat features, or other third-party channels.</li>
-          <li><strong>Services Usage Information:</strong> Hardware model, device browser, operating system, logs, session data, time stamps, your IP address, device IDs and information contained in cookies; clickstream data, such as your actions, clicks on pages or mobile application sites and its' areas you visit, came from or leave to, time you spent on a page, access times, and other details about your use of and actions on our website.</li>
-          <li><strong>Transactional Information:</strong> Information about transactions, documents, or activities on the Services, such as subject lines, names, emails, devices, IP addresses, or authentication methods of parties to a transaction or document, including their actions in a transaction or document.</li>
-          <li><strong>Information We Create or Generate:</strong> We infer new information from other data we collect, including using automated means to generate information about your likely preferences or other characteristics.</li>
-          <li><strong>Geolocation:</strong> Physical and coarse or precise location, including when you sign up for or use our Services or when you sign an electronic document.</li>
-          <li><strong>Account Access Information:</strong> Your username in combination with a password, security or access code, or other credential that allows access to the Services account.</li>
-        </ul>
+        <table style={tableStyle}>
+          <thead>
+            <tr>
+              <th style={thStyle}>Category</th>
+              <th style={thStyle}>Examples</th>
+              <th style={thStyle}>Purpose</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style={{ background: '#fbfdff' }}>
+              <td style={tdStyle}><strong>Contact</strong></td>
+              <td style={tdStyle}>Name, email, phone, address</td>
+              <td style={tdStyle}>Account creation, support, communications</td>
+            </tr>
+            <tr>
+              <td style={tdStyle}><strong>Payment</strong></td>
+              <td style={tdStyle}>Billing address, card details (masked), plan info</td>
+              <td style={tdStyle}>Subscription processing, fraud prevention</td>
+            </tr>
+            <tr style={{ background: '#fbfdff' }}>
+              <td style={tdStyle}><strong>Usage & Device</strong></td>
+              <td style={tdStyle}>IP address, browser type, OS, session logs</td>
+              <td style={tdStyle}>Service performance, analytics, security</td>
+            </tr>
+            <tr>
+              <td style={tdStyle}><strong>Documents</strong></td>
+              <td style={tdStyle}>Files you upload for processing</td>
+              <td style={tdStyle}>Provide requested document services</td>
+            </tr>
+            <tr style={{ background: '#fbfdff' }}>
+              <td style={tdStyle}><strong>Account Access</strong></td>
+              <td style={tdStyle}>Username, password, tokens</td>
+              <td style={tdStyle}>Authentication and access control</td>
+            </tr>
+          </tbody>
+        </table>
         
-        <h2 style={{ fontSize: '1.5rem', marginTop: '2rem', marginBottom: '1rem' }}>How We Collect Personal Information</h2>
-        <p style={{ marginBottom: '1rem', lineHeight: '1.6' }}>
-          When you communicate with us or interact with our Services, we may collect personal information in the following ways:
-        </p>
+        <h2 style={{ fontSize: '1.5rem', marginTop: '1.5rem', marginBottom: '0.75rem' }}>How We Collect Information</h2>
         <ul style={{ marginLeft: '2rem', marginBottom: '1rem', lineHeight: '1.6' }}>
           <li>Create an account</li>
           <li>Contact us or fill out a form on our websites</li>
           <li>Access or use our Services, with or without an account</li>
           <li>Participate in our surveys</li>
           <li>Sign up for communications from us</li>
-          <li>Engage with us on social media, community forums, or otherwise engage with us in person, online</li>
+          <li>Engage with us on social media or community forums</li>
         </ul>
         
-        <h2 style={{ fontSize: '1.5rem', marginTop: '2rem', marginBottom: '1rem' }}>How We Use Your Data</h2>
-        <p style={{ marginBottom: '1rem', lineHeight: '1.6' }}>
-          We will only use your personal data when the law allows us to. Most commonly, we will use your personal data in the following circumstances:
-        </p>
+        <h2 style={{ fontSize: '1.5rem', marginTop: '1.5rem', marginBottom: '0.75rem' }}>Cookies</h2>
+        <p style={{ marginBottom: '0.75rem' }}>We use essential and optional cookies to operate and improve the Service. You can manage cookie preferences from our Cookies page.</p>
+        <table style={tableStyle}>
+          <thead>
+            <tr>
+              <th style={thStyle}>Cookie Type</th>
+              <th style={thStyle}>Description</th>
+              <th style={thStyle}>Example Use</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style={{ background: '#fbfdff' }}>
+              <td style={tdStyle}><strong>Essential</strong></td>
+              <td style={tdStyle}>Required to sign in and operate core features</td>
+              <td style={tdStyle}>Session management, authentication</td>
+            </tr>
+            <tr>
+              <td style={tdStyle}><strong>Preferences</strong></td>
+              <td style={tdStyle}>Remembers settings and choices</td>
+              <td style={tdStyle}>Language, theme</td>
+            </tr>
+            <tr style={{ background: '#fbfdff' }}>
+              <td style={tdStyle}><strong>Analytics</strong></td>
+              <td style={tdStyle}>Helps us understand usage and improve</td>
+              <td style={tdStyle}>Page performance, feature adoption</td>
+            </tr>
+          </tbody>
+        </table>
+        
+        <h2 style={{ fontSize: '1.5rem', marginTop: '1.5rem', marginBottom: '0.75rem' }}>How We Use Your Data</h2>
         <ul style={{ marginLeft: '2rem', marginBottom: '1rem', lineHeight: '1.6' }}>
-          <li>To register you as a new customer</li>
-          <li>To process and deliver your service</li>
-          <li>To manage our relationship with you</li>
-          <li>To improve our website, products/services, marketing or customer relationships</li>
-          <li>To provide customer support and respond to your inquiries</li>
-          <li>To personalize your experience and deliver content and product offerings relevant to your interests</li>
+          <li>Register you as a new customer</li>
+          <li>Process and deliver your service</li>
+          <li>Manage our relationship with you</li>
+          <li>Improve website, products/services, and customer experience</li>
+          <li>Provide support and respond to your inquiries</li>
+          <li>Personalize your experience and content</li>
         </ul>
         
-        <h2 style={{ fontSize: '1.5rem', marginTop: '2rem', marginBottom: '1rem' }}>Data Security</h2>
+        <h2 style={{ fontSize: '1.5rem', marginTop: '1.5rem', marginBottom: '0.75rem' }}>Data Retention</h2>
         <p style={{ marginBottom: '1rem', lineHeight: '1.6' }}>
-          We have put in place appropriate security measures to prevent your personal data from being accidentally lost, used or accessed in an unauthorized way, altered or disclosed. 
-          In addition, we limit access to your personal data to those employees, agents, contractors and other third parties who have a business need to know.
+          We retain account and transactional information for as long as your account is active or as required to provide Services and comply with legal obligations. Uploaded documents may be retained temporarily for processing and are deleted or anonymized after a reasonable period unless you choose otherwise.
         </p>
         
-        <h2 style={{ fontSize: '1.5rem', marginTop: '2rem', marginBottom: '1rem' }}>Your Legal Rights</h2>
+        <h2 style={{ fontSize: '1.5rem', marginTop: '1.5rem', marginBottom: '0.75rem' }}>Third-Party Services</h2>
         <p style={{ marginBottom: '1rem', lineHeight: '1.6' }}>
+          We may use trusted third-party providers for authentication and payments (e.g., identity services and payment processors). These providers process limited personal information necessary to deliver their services.
+        </p>
+        
+        <h2 style={{ fontSize: '1.5rem', marginTop: '1.5rem', marginBottom: '0.75rem' }}>Security</h2>
+        <p style={{ marginBottom: '1rem', lineHeight: '1.6' }}>
+          We implement appropriate technical and organizational measures to safeguard personal information against unauthorized access, alteration, and disclosure.
+        </p>
+        
+        <h2 style={{ fontSize: '1.5rem', marginTop: '1.5rem', marginBottom: '0.75rem' }}>Service Use and Restrictions Overview</h2>
+        <p style={{ marginBottom: '0.75rem' }}>
+          To ensure fair use, certain features have limits for free users. Premium users do not have these limits. See the summary below:
+        </p>
+        <table style={tableStyle}>
+          <thead>
+            <tr>
+              <th style={thStyle}>Feature</th>
+              <th style={thStyle}>Free Tier</th>
+              <th style={thStyle}>Premium</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style={{ background: '#fbfdff' }}>
+              <td style={tdStyle}><strong>General (uploads)</strong></td>
+              <td style={tdStyle}>Up to 2 files at once; ≤ 5MB per file; ≤ 10 pages per PDF</td>
+              <td style={tdStyle}>No enforced limits</td>
+            </tr>
+            <tr>
+              <td style={tdStyle}><strong>Merge PDF</strong></td>
+              <td style={tdStyle}>Up to 2 files; ≤ 5MB per file; ≤ 10 pages per file</td>
+              <td style={tdStyle}>No enforced limits</td>
+            </tr>
+            <tr style={{ background: '#fbfdff' }}>
+              <td style={tdStyle}><strong>Convert PDF</strong></td>
+              <td style={tdStyle}>Up to 2 files; ≤ 5MB per file; convert ≤ 3 pages</td>
+              <td style={tdStyle}>No enforced limits</td>
+            </tr>
+            <tr>
+              <td style={tdStyle}><strong>Compress PDF</strong></td>
+              <td style={tdStyle}>1 file at a time; ≤ 5MB; low/medium compression only</td>
+              <td style={tdStyle}>High compression and batch supported</td>
+            </tr>
+            <tr style={{ background: '#fbfdff' }}>
+              <td style={tdStyle}><strong>Split PDF</strong></td>
+              <td style={tdStyle}>Input ≤ 5MB; input ≤ 10 pages; output ≤ 10 pages per operation</td>
+              <td style={tdStyle}>No enforced limits</td>
+            </tr>
+            <tr>
+              <td style={tdStyle}><strong>Edit PDF</strong></td>
+              <td style={tdStyle}>Add text annotations only</td>
+              <td style={tdStyle}>Shapes, images, and page operations</td>
+            </tr>
+            <tr style={{ background: '#fbfdff' }}>
+              <td style={tdStyle}><strong>Premium-only</strong></td>
+              <td style={tdStyle}>Protect/Unlock/Add Watermark/Scan not available</td>
+              <td style={tdStyle}>All premium-only features available</td>
+            </tr>
+            <tr>
+              <td style={tdStyle}><strong>Summarize PDF</strong></td>
+              <td style={tdStyle}>Available to all users; no free-tier limits</td>
+              <td style={tdStyle}>Same</td>
+            </tr>
+          </tbody>
+        </table>
+        <p style={{ fontSize: '0.95rem', color: '#666' }}>Note: Limits are subject to change as we improve the Service.</p>
+        
+        <h2 style={{ fontSize: '1.5rem', marginTop: '1.5rem', marginBottom: '0.75rem' }}>Your Legal Rights</h2>
+        <p style={{ marginBottom: '0.75rem', lineHeight: '1.6' }}>
           Under certain circumstances, you have rights under data protection laws in relation to your personal data, including the right to:
         </p>
         <ul style={{ marginLeft: '2rem', marginBottom: '1rem', lineHeight: '1.6' }}>
@@ -98,15 +238,21 @@ export default function PrivacyPolicy() {
           <li>Request transfer of your personal data</li>
           <li>Right to withdraw consent</li>
         </ul>
+
+        <h2 style={{ fontSize: '1.5rem', marginTop: '1.5rem', marginBottom: '0.75rem' }}>Children’s Privacy</h2>
+        <p style={{ marginBottom: '1rem', lineHeight: '1.6' }}>Our Services are not directed to children under 13 and we do not knowingly collect personal information from children.</p>
+
+        <h2 style={{ fontSize: '1.5rem', marginTop: '1.5rem', marginBottom: '0.75rem' }}>International Transfers</h2>
+        <p style={{ marginBottom: '1rem', lineHeight: '1.6' }}>Where applicable, personal information may be processed across regions to provide the Services, subject to appropriate safeguards.</p>
         
-        <h2 style={{ fontSize: '1.5rem', marginTop: '2rem', marginBottom: '1rem' }}>Contact Us</h2>
-        <p style={{ marginBottom: '1rem', lineHeight: '1.6' }}>
+        <h2 style={{ fontSize: '1.5rem', marginTop: '1.5rem', marginBottom: '0.75rem' }}>Contact Us</h2>
+        <p style={{ marginBottom: '0.75rem', lineHeight: '1.6' }}>
           If you have any questions about this privacy policy or our privacy practices, please contact us at:
         </p>
-        <p style={{ marginBottom: '1rem', lineHeight: '1.6' }}>
+        <div style={{ background: '#f7fbff', borderLeft: '4px solid #2e86de', padding: '0.75rem 1rem', borderRadius: '6px' }}>
           Email: privacy@pdfville.com<br />
           Address: 123 PDF Street, Document City, DC 12345
-        </p>
+        </div>
       </div>
     </>
   );
