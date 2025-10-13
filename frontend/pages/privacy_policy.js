@@ -38,8 +38,8 @@ export default function PrivacyPolicy() {
       <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '2rem 1rem', color: '#333' }}>
         <h1 style={{ fontSize: '2rem', marginBottom: '0.5rem', color: '#111' }}>Privacy Policy</h1>
         
-        <p style={{ marginBottom: '1rem', lineHeight: '1.6', color: '#555' }}>
-          Last Updated: {new Date().toLocaleDateString()}
+        <p style={{ marginBottom: '1rem', lineHeight: '1.6', color: '#555' }} suppressHydrationWarning>
+          Last Updated: {'2025-10-13'}
         </p>
 
         <div style={sectionBadge}>We value your privacy and aim to be transparent about the data we collect, how we use it, and the choices you have. Below you’ll find details along with easy-to-read tables.</div>
@@ -62,10 +62,11 @@ export default function PrivacyPolicy() {
         <p style={{ marginBottom: '1rem', lineHeight: '1.6' }}>
           We may change or update this Privacy Notice, including by posting changes on our websites, but we will notify you of any material changes to it as required by law.
         </p>
-        
-        <h2 style={{ fontSize: '1.5rem', marginTop: '1.5rem', marginBottom: '0.75rem' }}>Personal Information We Collect</h2>
         <p style={{ marginBottom: '1rem', lineHeight: '1.6' }}>
-          The types of personal information we may collect depend on your relationship with us and the Services you use:
+          Our goal is to explain our practices in plain language. In general, we collect only what is necessary to deliver and improve the Services, operate accounts, and meet security, legal, and billing obligations. When we ask for information, we aim to be specific about why it is needed, how long we retain it, and who can access it. If we rely on your consent (for example, for certain analytics), you may withdraw that consent at any time without affecting core features that are necessary for the Service to function.
+        </p>
+        <p style={{ marginBottom: '1rem', lineHeight: '1.6' }}>
+          Some data is provided directly by you (such as contact details when creating an account or uploading documents for processing), while other data is generated automatically by your device and browser (such as IP addresses and usage logs) to help us protect the Service and understand performance. We also receive limited information from service providers, such as payment status from payment processors or authentication confirmations from identity services. We do not sell personal data, and we only share information with third parties to the extent necessary to deliver requested functionality, comply with law, or protect the Service.
         </p>
         <table style={tableStyle}>
           <thead>
@@ -113,7 +114,9 @@ export default function PrivacyPolicy() {
           <li>Sign up for communications from us</li>
           <li>Engage with us on social media or community forums</li>
         </ul>
-        
+        <p style={{ marginBottom: '1rem', lineHeight: '1.6' }}>
+          We collect information in three primary ways: (1) directly from you when you provide it to us (for example, when you sign up, upload a file, or contact support), (2) automatically through cookies and similar technologies that record basic device details and usage patterns to keep the Service secure and reliable, and (3) from third-party providers that assist with authentication, payments, or hosting. We use this combined information to operate the Service, prevent abuse, and understand how features perform so we can improve them over time.
+        </p>
         <h2 style={{ fontSize: '1.5rem', marginTop: '1.5rem', marginBottom: '0.75rem' }}>Cookies</h2>
         <p style={{ marginBottom: '0.75rem' }}>We use essential and optional cookies to operate and improve the Service. You can manage cookie preferences from our Cookies page.</p>
         <table style={tableStyle}>
@@ -241,6 +244,9 @@ export default function PrivacyPolicy() {
 
         <h2 style={{ fontSize: '1.5rem', marginTop: '1.5rem', marginBottom: '0.75rem' }}>Children’s Privacy</h2>
         <p style={{ marginBottom: '1rem', lineHeight: '1.6' }}>Our Services are not directed to children under 13 and we do not knowingly collect personal information from children.</p>
+        <p style={{ marginBottom: '1rem', lineHeight: '1.6' }}>
+          If we learn that a child under 13 has provided personal information, we will take steps to delete that information promptly. If you are a parent or guardian and believe that your child has provided personal information to us, please contact us so we can address the issue.
+        </p>
 
         <h2 style={{ fontSize: '1.5rem', marginTop: '1.5rem', marginBottom: '0.75rem' }}>International Transfers</h2>
         <p style={{ marginBottom: '1rem', lineHeight: '1.6' }}>Where applicable, personal information may be processed across regions to provide the Services, subject to appropriate safeguards.</p>
@@ -253,6 +259,9 @@ export default function PrivacyPolicy() {
           Email: privacy@pdfville.com<br />
           Address: 123 PDF Street, Document City, DC 12345
         </div>
+        <p style={{ marginTop: '0.75rem', marginBottom: '1rem', lineHeight: '1.6', color: '#555' }}>
+          We aim to respond to privacy inquiries in a timely manner and will provide additional information about our practices upon request.
+        </p>
       </div>
     </>
   );

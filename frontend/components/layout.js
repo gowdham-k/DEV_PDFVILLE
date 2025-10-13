@@ -286,6 +286,19 @@ const MobileMenu = ({
 };
     
 
+  const handleAuthButton = () => {
+    console.log("Auth button clicked, isAuthenticated:", isAuthenticated);
+    if (isAuthenticated) {
+      handleLogout();
+    } else {
+      router.push('/login', undefined, { scroll: true }).then(() => {
+        // Ensure we land at the top on login route as well
+        if (typeof window !== 'undefined') {
+          window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+        }
+      });
+    }
+  };
   const handleLogout = async () => {
     try {
       const token = localStorage.getItem("access_token");
@@ -309,25 +322,57 @@ const MobileMenu = ({
 
   
 
+  // Utility: force scroll-to-top across containers
+  const scrollToTopStrong = () => {
+    if (typeof window === 'undefined') return;
+    const doScroll = () => {
+      try {
+        window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+        if (document && document.documentElement) {
+          document.documentElement.scrollTop = 0;
+        }
+        if (document && document.body) {
+          document.body.scrollTop = 0;
+        }
+        const mainEl = document.querySelector('main');
+        if (mainEl) {
+          mainEl.scrollTop = 0;
+        }
+      } catch (e) {
+        // no-op
+      }
+    };
+    // Try immediately and re-assert after render flush
+    doScroll();
+    requestAnimationFrame(doScroll);
+    setTimeout(doScroll, 50);
+    setTimeout(doScroll, 200);
+  };
+
   const handleNavigation = (path, tool = null) => {
     console.log("Layout handleNavigation called with:", { path, tool });
     
-    // Navigate directly to the path
-    router.push(path);
+    // Navigate directly to the path and ensure scroll-to-top
+    router.push(path, undefined, { scroll: true }).then(() => {
+      scrollToTopStrong();
+    });
     
     setIsOpen(false);
     setActiveSubmenu(null);
   };
 
-  const handleAuthButton = () => {
-    console.log("Auth button clicked, isAuthenticated:", isAuthenticated);
-    if (isAuthenticated) {
-      handleLogout();
-    } else {
-      router.push('/login');
-    }
+  // Add missing footer and legal navigation helpers used in the footer quick links
+  const handleFooterNavigation = (path) => {
+    router.push(path, undefined, { scroll: true }).then(() => {
+      scrollToTopStrong();
+    });
   };
 
+  const handleLegalPageNavigation = (path) => {
+    router.push(path, undefined, { scroll: true }).then(() => {
+      scrollToTopStrong();
+    });
+  };
 
   if (loading) {
     return (

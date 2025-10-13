@@ -1,4 +1,3 @@
-import Script from 'next/script';
 import { useEffect } from 'react';
 
 const HUBSPOT_PORTAL_ID = '243665895';
@@ -10,50 +9,24 @@ const HUBSPOT_PORTAL_ID = '243665895';
  * @param {Object} props.pageData - Additional data to track with the page view
  * @param {boolean} props.enableChat - Whether to enable the HubSpot chat widget
  */
+// Removed direct script injection to avoid runtime errors caused by nested <script> tags in dangerouslySetInnerHTML
+// HubSpot scripts are already included in _document.js; this component now only handles page view tracking when available.
 const HubspotTracking = ({ pageName, pageData = {}, enableChat = true }) => {
-  // Track page view when component mounts
   useEffect(() => {
-    if (window.hubspot) {
-      window.hubspot.track(pageName || 'Page Viewed', pageData);
+    if (typeof window !== 'undefined' && window.hubspot) {
+      try {
+        window.hubspot.track(pageName || 'Page Viewed', pageData);
+      } catch (e) {
+        // Silently ignore tracking errors
+      }
     }
   }, [pageName, pageData]);
 
-  return (
-    <>
-      {/* HubSpot Tracking Script */}
-      <Script
-        id="hubspot-tracking"
-        strategy="afterInteractive"
-        dangerouslySetInnerHTML={{
-          __html: `
-            (function(d,s,i,r) {
-              if (d.getElementById(i)){return;}
-              var n=d.createElement(s),e=d.getElementsByTagName(s)[0];
-              n.id=i;n.src='//js.hs-scripts.com/${HUBSPOT_PORTAL_ID}.js';
-              e.parentNode.insertBefore(n, e);
-            })(document,"script","hs-script-loader");
-          `
-        }}
-      />
-      
-      {/* HubSpot Chat Widget Script - Direct embed code */}
-      {enableChat && (
-        <Script
-          id="hubspot-chat-embed"
-          strategy="afterInteractive"
-          dangerouslySetInnerHTML={{
-            __html: `
-              <!-- Start of HubSpot Embed Code -->
-              <script type="text/javascript" id="hs-script-loader" async defer src="//js.hs-scripts.com/243665895.js"></script>
-              <!-- End of HubSpot Embed Code -->
-            `
-          }}
-        />
-      )}
-    </>
-  );
+  // No additional scripts injected here to prevent conflicts
+  return null;
 };
 
+export default HubspotTracking;
 /**
  * Track an event in HubSpot
  * @param {string} eventName - Name of the event to track
@@ -64,5 +37,3 @@ export const trackEvent = (eventName, eventData = {}) => {
     window.hubspot.track(eventName, eventData);
   }
 };
-
-export default HubspotTracking;

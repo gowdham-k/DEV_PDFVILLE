@@ -5,10 +5,27 @@ import awsConfig from "../awsConfig";
 import HubspotTracking from '../components/HubspotTracking';
 import { UpgradeProvider } from '../context/UpgradeContext';
 import UpgradeModal from '../components/UpgradeModal';
+import { useEffect } from 'react';
+import Router from 'next/router';
 
 Amplify.configure(awsConfig);
 
 export default function MyApp({ Component, pageProps }) {
+  // Ensure every navigation scrolls to top once the route change completes
+  useEffect(() => {
+    const handleScrollTop = () => {
+      if (typeof window !== 'undefined') {
+        window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+      }
+    };
+    Router.events.on('routeChangeComplete', handleScrollTop);
+    Router.events.on('hashChangeComplete', handleScrollTop);
+    return () => {
+      Router.events.off('routeChangeComplete', handleScrollTop);
+      Router.events.off('hashChangeComplete', handleScrollTop);
+    };
+  }, []);
+
   return (
     <UpgradeProvider>
       <Layout>
