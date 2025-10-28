@@ -3,6 +3,16 @@ import { useState, useContext } from "react";
 import { CategoryContext } from "../components/layout";
 import { API_BASE_URL } from "../components/config";
 
+// Load Razorpay checkout script dynamically
+const loadRazorpay = () => new Promise((resolve) => {
+  if (typeof window !== 'undefined' && window.Razorpay) return resolve(true);
+  const script = document.createElement('script');
+  script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+  script.onload = () => resolve(true);
+  script.onerror = () => resolve(false);
+  document.body.appendChild(script);
+});
+
 const plans = [
   {
     name: "Basic",
@@ -27,7 +37,7 @@ const plans = [
   {
     name: "Premium",
     price: "₹200 / month",
-    // Removed Stripe price ID
+    priceId: "price_1RysTKSGlE9lg1kM7ONgaYqG", // Replace with your actual Stripe price ID
     users: "1-25",
     features: [
       "All Basic Tools + More",
@@ -79,10 +89,10 @@ const faqs = [
     category: "Billing & Payments",
     questions: [
       { q: "Can I share single billing for multiple accounts?", a: "Yes, Premium and Business plans support consolidated billing for multiple users." },
-      { q: "What payment methods do you accept?", a: "Premium upgrades are managed via your account settings. For Business plans and invoicing, please contact our sales team." },
+      { q: "What payment methods do you accept?", a: "We accept major cards, UPI, and net banking via Razorpay Checkout." },
       { q: "What if I need to change my plan partway through my contract?", a: "You can upgrade or downgrade anytime, and billing will be adjusted accordingly." },
       { q: "Can you invoice me?", a: "Yes, invoices can be generated for Business plan subscriptions." },
-      { q: "Is my payment information secure?", a: "We follow industry-standard security practices. If you need assistance, reach out to our support team." },
+      { q: "Is my payment information secure?", a: "Yes, payments are processed securely via Razorpay using industry-standard encryption." },
     ],
   },
 ];
@@ -118,14 +128,79 @@ export default function PricingPage() {
       return;
     }
 
-    if (plan.name === "Premium") {
-      // Cognito-only flow: redirect to upgrade page or login first
-      if (!isAuthenticated) {
-        window.location.href = "/login";
-      } else {
-        window.location.href = "/upgrade";
+    // Handle Premium plan with Razorpay
+    setLoading(true);
+    
+    try {
+      const ok = await loadRazorpay();
+      if (!ok) {
+        alert('Payment SDK failed to load. Please check your network and try again.');
+        return;
       }
-      return;
+
+      let userEmail = null;
+      try { userEmail = typeof window !== 'undefined' ? localStorage.getItem('userEmail') : null; } catch {}
+
+      // Create order on backend
+      const orderRes = await fetch(`${API_BASE_URL}/api/razorpay/order`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ amount_rupees: 200, currency: 'INR', email: userEmail, plan: plan.name })
+      });
+      const orderData = await orderRes.json();
+      if (orderData.error || !orderData.order_id) {
+        console.error('Order creation failed:', orderData.error);
+        alert('Failed to start payment. Please try again.');
+        return;
+      }
+
+      const options = {
+        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+        amount: orderData.amount,
+        currency: orderData.currency || 'INR',
+        name: 'PDFville Premium',
+        description: 'Monthly subscription',
+        order_id: orderData.order_id,
+        prefill: { email: userEmail || '' },
+        notes: { email: userEmail || '', plan: plan.name },
+        theme: { color: '#667eea' },
+        handler: async function (response) {
+          try {
+            const verifyRes = await fetch(`${API_BASE_URL}/api/razorpay/verify`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+                email: userEmail,
+                amount: orderData.amount
+              })
+            });
+            const verifyData = await verifyRes.json();
+            if (verifyData.verified) {
+              window.location.href = '/success';
+            } else {
+              alert('Payment verification failed. Please contact support.');
+            }
+          } catch (err) {
+            console.error('Verification error:', err);
+            alert('Payment succeeded but verification failed. Please contact support.');
+          }
+        }
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.on('payment.failed', function (resp) {
+        console.error('Payment failed:', resp.error);
+        alert('Payment failed. Please try again.');
+      });
+      rzp.open();
+    } catch (error) {
+      console.error('Subscription error:', error);
+      alert('Something went wrong. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 

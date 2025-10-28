@@ -48,8 +48,10 @@ from scan_pdf import scan_pdf
 from edit_pdf import edit_pdf
 from summarize_pdf import setup_routes as setup_summarize_pdf_routes
 from search_extract_pdf import setup_routes as setup_search_extract_routes
+from datetime import datetime, timedelta
 
-
+import time
+import razorpay
 from functools import wraps
 from sqlalchemy.orm import Session
 from datetime import datetime
@@ -117,6 +119,15 @@ app.config['REGION'] = os.environ.get('REGION', "ap-southeast-2")
 app.config['USER_POOL_ID'] = os.environ.get('USER_POOL_ID', "ap-southeast-2_LeVlFHGOf")
 app.config['APP_CLIENT_ID'] = os.environ.get('APP_CLIENT_ID', "1u8apgpumk8dbnkeaomu9alv67")
 app.config['APP_CLIENT_SECRET'] = os.environ.get('APP_CLIENT_SECRET', "1idscabr0beu9v3fqfffsm3mbggif1j9jjlnpnp3pk09mhphk96p")
+
+RAZORPAY_KEY_ID = os.environ.get('RAZORPAY_KEY_ID')
+RAZORPAY_KEY_SECRET = os.environ.get('RAZORPAY_KEY_SECRET')
+razorpay_client = None
+if RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET:
+    try:
+        razorpay_client = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET))
+    except Exception as e:
+        print(f"Warning: Failed to initialize Razorpay client: {e}")
 
 # Initialize database
 def initialize_database():
@@ -249,7 +260,89 @@ def get_user_files_route(user_id):
     finally:
         db.close()
 
+# ---------- Payments: Razorpay ----------
 
+@app.route(prefix_route("/razorpay/order"), methods=["POST"])
+@app.route("/api/razorpay/order", methods=["POST"])  # Ensure /api path works even without API_PREFIX
+def create_razorpay_order():
+    """Create a Razorpay order for checkout"""
+    if not razorpay_client:
+        return jsonify({"error": "Razorpay is not configured"}), 500
+
+    data = request.json or {}
+    try:
+        amount_rupees = float(data.get("amount_rupees", 200))  # default ₹200
+        currency = data.get("currency", "INR")
+        email = data.get("email", "")
+        notes = {"email": email, "plan": data.get("plan", "Premium")}
+
+        order = razorpay_client.order.create({
+            "amount": int(amount_rupees * 100),  # amount in paise
+            "currency": currency,
+            "receipt": f"order_rcpt_{int(time.time())}",
+            "payment_capture": 1,
+            "notes": notes
+        })
+
+        return jsonify({
+            "order_id": order.get("id"),
+            "amount": order.get("amount"),
+            "currency": order.get("currency"),
+            "key": RAZORPAY_KEY_ID
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+
+
+@app.route(prefix_route("/razorpay/verify"), methods=["POST"])
+@app.route("/api/razorpay/verify", methods=["POST"])  # Ensure /api path works even without API_PREFIX
+def verify_razorpay_payment():
+    """Verify Razorpay payment signature and upgrade user"""
+    if not razorpay_client:
+        return jsonify({"error": "Razorpay is not configured"}), 500
+
+    payload = request.json or {}
+    try:
+        params = {
+            'razorpay_order_id': payload['razorpay_order_id'],
+            'razorpay_payment_id': payload['razorpay_payment_id'],
+            'razorpay_signature': payload['razorpay_signature'],
+        }
+
+        # Verify signature
+        razorpay_client.utility.verify_payment_signature(params)
+
+        # Update user subscription if email provided
+        email = payload.get('email')
+        amount = payload.get('amount')  # amount in paise
+
+        upgraded = False
+        if email:
+            from db_config import get_db
+            import db_utils
+            db = next(get_db())
+            try:
+                payment_data = {
+                    'payment_id': params['razorpay_payment_id'],
+                    'payment_amount': int(amount) // 100 if amount else None,
+                    'payment_date': datetime.utcnow(),
+                    'payment_method': 'razorpay',
+                    'payment_status': 'captured',
+                    'subscription_expiry': datetime.utcnow() + timedelta(days=30),
+                }
+                user = db_utils.update_user_payment_info(db, email, payment_data)
+                upgraded = bool(user)
+            finally:
+                db.close()
+
+        return jsonify({"verified": True, "upgraded": upgraded})
+
+    except razorpay.errors.SignatureVerificationError as e:
+        return jsonify({"error": "Signature verification failed", "details": str(e)}), 400
+    except KeyError:
+        return jsonify({"error": "Missing required fields"}), 400
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
 
 # ---- AWS Cognito Config ----
 
