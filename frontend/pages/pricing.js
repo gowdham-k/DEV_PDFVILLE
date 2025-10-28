@@ -179,7 +179,8 @@ export default function PricingPage() {
             });
             const verifyData = await verifyRes.json();
             if (verifyData.verified) {
-              window.location.href = '/success';
+              const pid = response.razorpay_payment_id || '';
+              window.location.href = `/success?status=approved${pid ? `&pid=${encodeURIComponent(pid)}` : ''}`;
             } else {
               alert('Payment verification failed. Please contact support.');
             }
