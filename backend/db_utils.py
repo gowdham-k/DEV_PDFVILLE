@@ -39,6 +39,17 @@ def update_user_subscription_status(db: Session, user_id: int, is_pro: bool) -> 
         db.commit()
         db.refresh(db_user)
     return db_user
+    
+def set_user_premium_by_email(db: Session, email: str, is_pro: bool) -> Optional[User]:
+    """Set premium flag for a user by email and update subscription_status."""
+    db_user = get_user_by_email(db, email)
+    if not db_user:
+        return None
+    db_user.is_pro = is_pro
+    db_user.subscription_status = "pro" if is_pro else "basic"
+    db.commit()
+    db.refresh(db_user)
+    return db_user
 
 # Payment operations
 def update_user_payment_info(db: Session, email: str, payment_data: dict) -> Optional[User]:

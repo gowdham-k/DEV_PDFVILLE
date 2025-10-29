@@ -356,10 +356,37 @@ def verify_razorpay_payment():
         upgraded = False
         if email:
             from db_config import get_db
-            from cognito_utils import set_premium_cognito            
             import db_utils
+            from cognito_utils import set_premium_cognito            
+            import uuid
             db = next(get_db())
             try:
+                                # Ensure a DB user record exists for this email before applying payment
+                try:
+                 # Ensure a DB user record exists for this email before applying payment
+                try:
+                    existing = db_utils.get_user_by_email(db, email)
+                    if not existing:
+                        # Attempt to fetch Cognito 'sub' to store as cognito_id
+                        try:
+                            response = cognito.list_users(
+                                UserPoolId=USER_POOL_ID,
+                                Filter=f'email = "{email}"',
+                                Limit=1
+                            )
+                            cognito_sub = None
+                            if response.get('Users'):
+                                attrs = {a['Name']: a['Value'] for a in response['Users'][0]['Attributes']}
+                                cognito_sub = attrs.get('sub') or response['Users'][0].get('Username')
+                            db_utils.create_user(db, email=email, cognito_id=cognito_sub or f"local-{uuid.uuid4()}" )
+                        except Exception:
+                            # If Cognito lookup fails, still create a local user record
+                            db_utils.create_user(db, email=email, cognito_id=f"local-{uuid.uuid4()}" )
+                except Exception:
+                    # Non-fatal: continue to payment info update even if ensure step had issues
+                    pass
+
+
                 payment_data = {
                     'payment_id': params['razorpay_payment_id'],
                     'payment_amount': int(amount) // 100 if amount else None,
@@ -1042,6 +1069,56 @@ def downgrade_expired_subscriptions_route():
         return jsonify({"error": str(e)}), 500
     finally:
         db.close()
+
+@app.route('/api/admin/sync-db-from-cognito', methods=['POST'])
+def sync_db_from_cognito_route():
+    """Sync local DB premium status from Cognito custom:is_premium_ for a given email.
+
+    Body: { email: string }
+    Returns: { email, is_pro, subscription_status }
+    """
+    data = request.json or {}
+    email = data.get('email') or request.args.get('email')
+    if not email:
+        return jsonify({"error": "Email is required"}), 400
+
+    try:
+        # Read Cognito attributes for the user
+        response = cognito.list_users(
+            UserPoolId=USER_POOL_ID,
+            Filter=f'email = "{email}"',
+            Limit=1
+        )
+        if not response.get('Users'):
+            return jsonify({"error": "User not found in Cognito"}), 404
+
+        user_attrs = {attr['Name']: attr['Value'] for attr in response['Users'][0]['Attributes']}
+        is_premium_flag = user_attrs.get('custom:is_premium_') == 'true'
+
+        # Update local DB accordingly
+        db = next(get_db())
+        try:
+            user = db_utils.get_user_by_email(db, email)
+            if not user:
+                # Ensure a DB record exists for this email
+                import uuid
+                user = db_utils.create_user(db, email=email, cognito_id=f"local-{uuid.uuid4()}")
+
+            user.is_pro = is_premium_flag
+            user.subscription_status = "pro" if is_premium_flag else "basic"
+            db.commit()
+            db.refresh(user)
+
+            return jsonify({
+                "email": user.email,
+                "is_pro": bool(user.is_pro),
+                "subscription_status": user.subscription_status
+            }), 200
+        finally:
+            db.close()
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 
 @app.route(prefix_route("/pdf-add-page-numbers"), methods=["POST"])
 def pdf_add_page_numbers_route():
