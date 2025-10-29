@@ -2,7 +2,7 @@ import os
 from PyPDF2 import PdfReader
 import boto3 # Import boto3
 from flask import current_app # Import current_app to access app config
-
+from datetime import datetime
 # In-memory user store (for demo only) - This will become less critical
 # users = {
 #     "free@example.com": {"is_premium_": False},
@@ -12,6 +12,34 @@ from flask import current_app # Import current_app to access app config
 # Remove or comment out the 'users' dictionary if you fully transition to Cognito.
 # For now, let's keep it for backward compatibility with get_user if needed elsewhere.
 def get_user(email):
+        # First, enforce expiry in local DB and sync Cognito if needed
+    try:
+        from db_config import get_db
+        import db_utils
+        from cognito_utils import set_premium_cognito
+        db = next(get_db())
+        try:
+            db_user = db_utils.get_user_by_email(db, email)
+            if db_user and db_user.is_pro and db_user.subscription_expiry:
+                if datetime.utcnow() > db_user.subscription_expiry:
+                    # Downgrade expired subscription
+                    db_user.is_pro = False
+                    db_user.subscription_status = "basic"
+                    db.commit()
+                    db.refresh(db_user)
+                    try:
+                        set_premium_cognito(email, False)
+                    except Exception:
+                        # Keep going even if Cognito update fails
+                        pass
+        finally:
+            db.close()
+    except Exception as e:
+        # Log but don't block user feature check
+        print(f"Error enforcing subscription expiry for {email}: {e}")
+
+    # Then, read premium flag from Cognito
+
     cognito_client = boto3.client("cognito-idp", region_name=current_app.config['REGION'])
     user_pool_id = current_app.config['USER_POOL_ID']
 

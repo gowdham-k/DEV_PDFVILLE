@@ -178,6 +178,37 @@ def create_user_route():
     finally:
         db.close()
 
+@app.route('/api/users/subscription-status', methods=['GET'])
+def get_subscription_status_v2():
+    """Get subscription status for a user by email (v2 under /api/users)."""
+    email = request.args.get('email')
+    if not email:
+        return jsonify({"error": "Missing email"}), 400
+
+    db = next(get_db())
+    try:
+        user = db_utils.get_user_by_email(db, email)
+        if not user:
+            return jsonify({"error": "User not found"}), 404
+
+        return jsonify({
+            "email": user.email,
+            "is_pro": bool(user.is_pro),
+            "subscription_status": user.subscription_status,
+            "subscription_expiry": user.subscription_expiry.isoformat() if user.subscription_expiry else None,
+            "payment_id": user.payment_id,
+            "payment_amount": user.payment_amount,
+            "payment_date": user.payment_date.isoformat() if user.payment_date else None,
+            "payment_method": user.payment_method,
+            "payment_status": user.payment_status,
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    finally:
+        db.close()
+
+
+
 @app.route('/api/users/<int:user_id>', methods=['GET'])
 def get_user_route(user_id):
     db = next(get_db())
@@ -260,6 +291,12 @@ def get_user_files_route(user_id):
     finally:
         db.close()
 
+
+app.config['REGION'] = REGION
+app.config['USER_POOL_ID'] = USER_POOL_ID
+app.config['APP_CLIENT_ID'] = APP_CLIENT_ID
+app.config['APP_CLIENT_SECRET'] = APP_CLIENT_SECRET
+
 # ---------- Payments: Razorpay ----------
 
 @app.route(prefix_route("/razorpay/order"), methods=["POST"])
@@ -319,6 +356,7 @@ def verify_razorpay_payment():
         upgraded = False
         if email:
             from db_config import get_db
+            from cognito_utils import set_premium_cognito            
             import db_utils
             db = next(get_db())
             try:
@@ -332,6 +370,13 @@ def verify_razorpay_payment():
                 }
                 user = db_utils.update_user_payment_info(db, email, payment_data)
                 upgraded = bool(user)
+                # Reflect premium upgrade in Cognito for feature gating
+                if upgraded:
+                    try:
+                        set_premium_cognito(email, True)
+                    except Exception as _:
+                        # Do not fail the payment verification if Cognito update fails
+                        pass
             finally:
                 db.close()
 
@@ -901,6 +946,102 @@ def pdf_unlock_route():
 def rotate_pdf_pages_route():
     """Route for rotating PDF pages"""
     return rotate_pdf_pages()
+
+@app.route(prefix_route("/subscription/status"), methods=["GET"])
+@app.route("/api/subscription/status", methods=["GET"])  # Ensure /api path works even without API_PREFIX
+def get_subscription_status():
+    """Get subscription status for a user by email.
+
+    Query params: email=<email>
+    Returns: { email, is_pro, subscription_status, subscription_expiry, payment_* }
+    """
+    email = request.args.get("email")
+    if not email:
+        return jsonify({"error": "Missing email"}), 400
+
+    from db_config import get_db
+    import db_utils
+
+    db = next(get_db())
+    try:
+        user = db_utils.get_user_by_email(db, email)
+        if not user:
+            return jsonify({"error": "User not found"}), 404
+
+        return jsonify({
+            "email": user.email,
+            "is_pro": bool(user.is_pro),
+            "subscription_status": user.subscription_status,
+            "subscription_expiry": user.subscription_expiry.isoformat() if user.subscription_expiry else None,
+            "payment_id": user.payment_id,
+            "payment_amount": user.payment_amount,
+            "payment_date": user.payment_date.isoformat() if user.payment_date else None,
+            "payment_method": user.payment_method,
+            "payment_status": user.payment_status,
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    finally:
+        db.close()
+
+
+@app.route(prefix_route("/subscriptions/downgrade-expired"), methods=["POST"])
+def downgrade_expired_subscriptions_route():
+    """Admin job: downgrade all users whose subscription has expired and sync Cognito.
+
+    Protection: requires header X-Admin-Key to match env ADMIN_JOB_KEY.
+    """
+    admin_key = os.environ.get("ADMIN_JOB_KEY")
+    provided_key = request.headers.get("X-Admin-Key")
+    if not admin_key or provided_key != admin_key:
+        return jsonify({"error": "Unauthorized"}), 401
+
+    from db_config import get_db
+    from models import User
+    from cognito_utils import set_premium_cognito
+
+    db = next(get_db())
+    downgraded_emails = []
+    cognito_updated = []
+    cognito_failed = []
+
+    try:
+        now = datetime.utcnow()
+        expired_users = db.query(User).filter(
+            User.is_pro == True,
+            User.subscription_expiry != None,
+            User.subscription_expiry < now
+        ).all()
+
+        for user in expired_users:
+            user.is_pro = False
+            user.subscription_status = "basic"
+            downgraded_emails.append(user.email)
+
+        if expired_users:
+            db.commit()
+
+        # Sync Cognito premium flag for downgraded users
+        for email in downgraded_emails:
+            try:
+                if set_premium_cognito(email, False):
+                    cognito_updated.append(email)
+                else:
+                    cognito_failed.append(email)
+            except Exception:
+                cognito_failed.append(email)
+
+        return jsonify({
+            "downgraded_count": len(downgraded_emails),
+            "downgraded_emails": downgraded_emails,
+            "cognito_updated": cognito_updated,
+            "cognito_failed": cognito_failed
+        })
+    except Exception as e:
+        db.rollback()
+        return jsonify({"error": str(e)}), 500
+    finally:
+        db.close()
 
 @app.route(prefix_route("/pdf-add-page-numbers"), methods=["POST"])
 def pdf_add_page_numbers_route():
